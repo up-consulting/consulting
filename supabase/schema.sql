@@ -17,6 +17,7 @@ create table if not exists profiles (
   status      text not null default 'pending' check (status in ('pending','approved','rejected','suspended')),
   avatar_url  text,
   affirmation text default '',
+  requested_coach text default '',   -- 멤버가 가입 시 지정한 담당 코치 이름
   created_at  timestamptz not null default now(),
   approved_at timestamptz
 );
@@ -173,12 +174,21 @@ $$;
 -- 3. TRIGGERS
 -- ============================================================================
 
--- (a) 회원가입 시 profiles 자동 생성 (이름은 메타데이터에서)
+-- (a) 회원가입 시 profiles 자동 생성 (이름/역할/담당코치는 메타데이터에서)
+--     role 은 'coach' 일 때만 코치, 그 외(누락/임의값)는 모두 member → admin 자가가입 차단
 create or replace function handle_new_user()
 returns trigger language plpgsql security definer set search_path = public as $$
+declare
+  v_role text;
 begin
-  insert into profiles (id, email, name)
-  values (new.id, new.email, coalesce(new.raw_user_meta_data->>'name', split_part(new.email,'@',1)))
+  v_role := case when (new.raw_user_meta_data->>'role') = 'coach' then 'coach' else 'member' end;
+  insert into profiles (id, email, name, role, status, requested_coach)
+  values (
+    new.id, new.email,
+    coalesce(new.raw_user_meta_data->>'name', split_part(new.email,'@',1)),
+    v_role, 'approved',
+    coalesce(new.raw_user_meta_data->>'requested_coach', '')
+  )
   on conflict (id) do nothing;
   return new;
 end;

@@ -5,9 +5,10 @@
 
 const API = {
   /* ----------------------------- 인증 ----------------------------- */
-  async signUp(email, password, name) {
+  async signUp(email, password, name, role = 'member', requestedCoach = '') {
     const { data, error } = await sb.auth.signUp({
-      email, password, options: { data: { name } },
+      email, password,
+      options: { data: { name, role, requested_coach: requestedCoach } },
     });
     if (error) throw error;
     return data;
@@ -114,6 +115,15 @@ const API = {
     });
     if (error) throw error;
   },
+  async updateGoal(goalId, title, target, unit) {
+    const { error } = await sb.from('goals')
+      .update({ title, target_value: target, unit }).eq('id', goalId);
+    if (error) throw error;
+  },
+  async deleteGoal(goalId) {
+    const { error } = await sb.from('goals').delete().eq('id', goalId);
+    if (error) throw error;
+  },
   async checkinGoal(goalId, value, note) {
     const { error } = await sb.from('goal_checkins').insert({ goal_id: goalId, value, note: note || '' });
     if (error) throw error;
@@ -186,17 +196,28 @@ const API = {
     if (error) throw error;
   },
 
-  // 연결 대기 멤버(아직 active enrollment 없는 member)
-  async unconnectedMembers() {
-    const { data: members } = await sb.from('profiles').select('id, name, email').eq('role', 'member');
+  // 연결 대기 멤버 — 이 코치 이름을 지정했고 아직 active enrollment 없는 member
+  async unconnectedMembers(coachName) {
+    const { data: members } = await sb.from('profiles')
+      .select('id, name, email, requested_coach').eq('role', 'member');
     const { data: active } = await sb.from('enrollments').select('member_id').eq('status', 'active');
     const taken = new Set((active || []).map(e => e.member_id));
-    return (members || []).filter(m => !taken.has(m.id));
+    const want = (coachName || '').trim().toLowerCase();
+    return (members || []).filter(m =>
+      !taken.has(m.id) && (m.requested_coach || '').trim().toLowerCase() === want
+    );
   },
+  // 연결 시 입력한 목표 = 메인 목표(= 오늘의 미션). enrollment.goal_summary 에 저장.
   async connectMember(memberId, coachId, goalSummary) {
     const { error } = await sb.from('enrollments').insert({
-      member_id: memberId, coach_id: coachId, goal_summary: goalSummary || '',
+      member_id: memberId, coach_id: coachId, goal_summary: (goalSummary || '').trim(),
     });
+    if (error) throw error;
+  },
+  // 코치가 메인 목표(미션)를 중간에 수정
+  async updateEnrollmentGoal(enrollmentId, goalSummary) {
+    const { error } = await sb.from('enrollments')
+      .update({ goal_summary: (goalSummary || '').trim() }).eq('id', enrollmentId);
     if (error) throw error;
   },
 };

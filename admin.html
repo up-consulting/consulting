@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>코치 패널 — 이음</title>
+<title>코치 패널 — 오늘일기</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -53,7 +53,7 @@
     <section data-pane="connect" hidden>
       <div class="card">
         <div class="card-title" style="margin-bottom:6px;">연결 대기 멤버</div>
-        <p class="small muted" style="margin:0 0 14px;">새로 가입한 멤버를 30일 여정에 연결하세요.</p>
+        <p class="small muted" style="margin:0 0 14px;">가입 시 <b>나를 담당 코치로 지정</b>한 멤버만 표시됩니다.</p>
         <div id="unconnected"></div>
       </div>
     </section>
@@ -78,6 +78,18 @@
   </div>
 </div>
 
+<!-- 메인 목표 수정 모달 -->
+<div class="modal-bg" id="m-maingoal">
+  <div class="modal">
+    <div class="grip"></div>
+    <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;" id="mg-name"></h3>
+    <p class="small muted" style="margin:0 0 16px;">멤버 홈의 ‘오늘의 미션’으로 표시됩니다.</p>
+    <div class="field"><label>메인 목표</label><textarea id="mg-text" placeholder="예: 매일 11시 전 취침"></textarea></div>
+    <button class="btn" id="mg-save" onclick="saveMainGoal()">저장하기</button>
+    <button class="btn line mt8" onclick="closeModal('m-maingoal')">닫기</button>
+  </div>
+</div>
+
 <!-- 연결 모달 -->
 <div class="modal-bg" id="m-connect">
   <div class="modal">
@@ -95,7 +107,7 @@
 <script src="assets/api.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  let ME, REVIEWS = [], CUR_REVIEW = null, CUR_CONNECT = null;
+  let ME, REVIEWS = [], MEMBERS = [], CUR_REVIEW = null, CUR_CONNECT = null, CUR_MAIN = null;
 
   (async function init() {
     document.getElementById('out').innerHTML = icon('logout', 18);
@@ -115,6 +127,7 @@
 
   async function loadDash() {
     const [members, alerts] = await Promise.all([API.coachMembers(ME.id), API.alerts(ME.id)]);
+    MEMBERS = members;
     document.getElementById('k-members').textContent = members.length;
     document.getElementById('k-alerts').textContent = alerts.length;
 
@@ -124,14 +137,33 @@
         <div class="d">${a.message}</div></div></div>`).join('')
       : '<p class="small muted" style="margin:0;">지금은 특별히 살펴볼 신호가 없어요.</p>';
 
-    document.getElementById('members').innerHTML = members.length ? members.map(c => `
+    document.getElementById('members').innerHTML = members.length ? members.map((c, i) => `
       <div class="list-item">
         <div class="avatar">${(c.member?.name || '?')[0]}</div>
         <div class="meta"><div class="nm">${c.member?.name || '멤버'}</div>
-          <div class="sub">DAY ${c.day}/30 · 이행률 ${c.rate}% · 기분 ${c.moodAvg || '–'}</div></div>
-        <div style="width:64px;"><div class="progress" style="height:7px;"><i style="width:${c.rate}%"></i></div></div>
+          <div class="sub">DAY ${c.day}/30 · 이행률 ${c.rate}% · 기분 ${c.moodAvg || '–'}</div>
+          <div class="sub" style="color:var(--primary-d);">🎯 ${c.goal_summary || '메인 목표 미설정'}</div></div>
+        <button class="btn sm line" onclick="openEditMain(${i})">목표</button>
       </div>`).join('')
       : '<p class="small muted" style="margin:0;">아직 연결된 멤버가 없어요. ‘멤버 연결’ 탭에서 시작하세요.</p>';
+  }
+
+  function openEditMain(i) {
+    const c = MEMBERS[i]; if (!c) return;
+    CUR_MAIN = c.id;
+    document.getElementById('mg-name').textContent = `${c.member?.name || '멤버'} · 메인 목표`;
+    document.getElementById('mg-text').value = c.goal_summary || '';
+    openModal('m-maingoal');
+  }
+  async function saveMainGoal() {
+    const text = document.getElementById('mg-text').value.trim();
+    if (!text) return toast('메인 목표를 입력해주세요');
+    const btn = document.getElementById('mg-save'); btn.disabled = true; btn.textContent = '저장 중…';
+    try {
+      await API.updateEnrollmentGoal(CUR_MAIN, text);
+      closeModal('m-maingoal'); toast('메인 목표를 수정했어요'); await loadDash();
+    } catch (e) { toast(e.message || '저장 실패'); }
+    finally { btn.disabled = false; btn.textContent = '저장하기'; }
   }
 
   async function loadReviews() {
@@ -149,14 +181,14 @@
   }
 
   async function loadConnect() {
-    const list = await API.unconnectedMembers();
+    const list = await API.unconnectedMembers(ME.name);
     document.getElementById('unconnected').innerHTML = list.length ? list.map((m, i) => `
       <div class="list-item">
         <div class="avatar">${m.name[0]}</div>
         <div class="meta"><div class="nm">${m.name}</div><div class="sub">${m.email}</div></div>
         <button class="btn sm" onclick="openConnect('${m.id}','${m.name.replace(/'/g,"")}')">연결</button>
       </div>`).join('')
-      : '<p class="small muted" style="margin:0;">연결 대기 중인 멤버가 없어요.</p>';
+      : `<p class="small muted" style="margin:0;">‘${ME.name}’ 코치를 지정한 대기 멤버가 없어요.</p>`;
   }
 
   async function openReview(i) {

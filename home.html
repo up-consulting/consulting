@@ -3,20 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>홈 — 이음</title>
+<title>홈 — 오늘일기</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
 <div class="app">
 
   <header class="topbar">
-    <div class="brand"><span class="dot"></span> 이음</div>
+    <div class="brand"><span class="dot"></span> 오늘일기</div>
     <div class="spacer"></div>
     <button class="ico-btn" id="bell" onclick="toast('새 소식 없음')"></button>
   </header>
 
   <main class="page" id="main">
-    <p class="page-sub" id="greet">불러오는 중…</p>
+    <div class="greet-block">
+      <span class="date-chip" id="now"></span>
+      <h1 class="greet" id="greet">불러오는 중…</h1>
+      <p class="greet-sub" id="greet-sub">오늘도 한 걸음, 같이 가요.</p>
+      <div class="affirm" id="affirm" style="display:none;"></div>
+    </div>
     <div id="content"></div>
   </main>
 
@@ -49,15 +54,34 @@
   (async function init() {
     document.getElementById('bell').innerHTML = icon('bell', 19);
     document.getElementById('tabbar-slot').innerHTML = renderTabbar('home');
+    tickClock(); setInterval(tickClock, 15000);
     ME = await API.guard('member');
     if (!ME) return;
 
     ENR = await API.myEnrollment();
-    document.getElementById('greet').innerHTML = `안녕하세요, <b>${ME.name}</b>님<br>오늘도 한 걸음, 같이 가요.`;
+    const h = new Date().getHours();
+    const part = h < 6 ? '늦은 밤이에요' : h < 11 ? '좋은 아침이에요' : h < 14 ? '점심 즈음이에요'
+               : h < 18 ? '나른한 오후예요' : h < 22 ? '편안한 저녁이에요' : '하루를 마무리할 시간이에요';
+    const emo = h < 6 ? '🌙' : h < 11 ? '☀️' : h < 18 ? '🌿' : h < 22 ? '🌆' : '🌙';
+    document.getElementById('greet').innerHTML = `${ME.name}님,<br>${part} ${emo}`;
+
+    const af = document.getElementById('affirm');
+    if (ME.affirmation) { af.textContent = `“${ME.affirmation}”`; af.style.display = 'inline-block'; }
+    else af.style.display = 'none';
 
     if (!ENR) { renderWaiting(); return; }
     await renderHome();
   })();
+
+  function tickClock() {
+    const d = new Date();
+    const days = ['일','월','화','수','목','금','토'];
+    let h = d.getHours(); const ap = h < 12 ? '오전' : '오후';
+    let hh = h % 12; if (hh === 0) hh = 12;
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    document.getElementById('now').textContent =
+      `${d.getMonth()+1}월 ${d.getDate()}일 (${days[d.getDay()]}) · ${ap} ${hh}:${mm}`;
+  }
 
   function renderWaiting() {
     document.getElementById('content').innerHTML = `
@@ -81,9 +105,11 @@
     const today = new Date().toISOString().slice(0, 10);
     const myMood = await API.moodToday(ENR.id, today);
 
+    // 오늘의 미션 = 메인 목표(코치가 정한 goal_summary)
+    const missionText = ENR.goal_summary || '메인 목표가 아직 설정되지 않았어요';
     const heroBody = TODAY
-      ? `<h2>${TODAY.mission}</h2><button class="btn warm" onclick="openSubmit()">인증하기</button>`
-      : `<h2>오늘은 예정된 미션이 없어요</h2><p class="small" style="opacity:.85;margin:0;">내일 다시 만나요.</p>`;
+      ? `<h2>${missionText}</h2><button class="btn warm" onclick="openSubmit()">인증하기</button>`
+      : `<h2>${missionText}</h2><p class="small" style="opacity:.85;margin:0;">오늘은 예정된 인증이 없어요.</p>`;
 
     document.getElementById('content').innerHTML = `
       <section class="card hero">
@@ -116,9 +142,9 @@
       </section>
 
       <section class="card">
-        <div class="card-head"><span class="card-title">이번 달 목표</span>
+        <div class="card-head"><span class="card-title">서브 목표</span>
           <a href="goals.html" class="small" style="color:var(--primary);font-weight:700;">관리</a></div>
-        <div id="goal-mini">${goals.length ? '' : '<p class="small muted" style="margin:0;">아직 목표가 없어요. 목표 탭에서 추가해보세요.</p>'}</div>
+        <div id="goal-mini">${goals.length ? '' : '<p class="small muted" style="margin:0;">아직 서브 목표가 없어요. 목표 탭에서 추가해보세요.</p>'}</div>
       </section>`;
 
     // 목표 미니
@@ -143,7 +169,7 @@
   }
 
   function openSubmit() {
-    document.getElementById('m-task').textContent = TODAY.mission;
+    document.getElementById('m-task').textContent = ENR.goal_summary || '오늘의 미션 인증';
     openModal('m-submit');
   }
   async function submitProof() {

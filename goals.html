@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>목표 — 이음</title>
+<title>목표 — 오늘일기</title>
 <link rel="stylesheet" href="assets/style.css">
 </head>
 <body>
@@ -12,16 +12,17 @@
   <header class="topbar">
     <div class="brand"><span class="dot"></span> 목표</div>
     <div class="spacer"></div>
-    <button class="ico-btn" id="add" onclick="openModal('m-goal')"></button>
+    <button class="ico-btn" id="add" onclick="openAddGoal()"></button>
   </header>
 
   <main class="page">
-    <h1 class="page-title">이번 달 목표</h1>
-    <p class="page-sub">시작할 때 정한 목표를 주차별로 채워가요.</p>
+    <h1 class="page-title">서브 목표</h1>
+    <p class="page-sub">메인 목표를 받쳐주는 작은 목표들을 주차별로 채워가요.</p>
 
+    <div id="main-goal"></div>
     <div id="goals"><p class="small muted">불러오는 중…</p></div>
 
-    <button class="btn ghost mt8" id="add-btn" onclick="openModal('m-goal')">목표 추가</button>
+    <button class="btn ghost mt8" id="add-btn" onclick="openAddGoal()">서브 목표 추가</button>
   </main>
 
   <div id="tabbar-slot"></div>
@@ -46,13 +47,14 @@
 <div class="modal-bg" id="m-goal">
   <div class="modal">
     <div class="grip"></div>
-    <h3 style="margin:0 0 16px;font-size:17px;font-weight:800;">새 목표</h3>
+    <h3 style="margin:0 0 16px;font-size:17px;font-weight:800;" id="g-modal-title">새 목표</h3>
     <div class="field"><label>목표 이름</label><input id="g-title" placeholder="예: 주 4회 운동하기"></div>
     <div class="grid2">
       <div class="field"><label>목표치</label><input type="number" id="g-target" placeholder="16"></div>
       <div class="field"><label>단위</label><input id="g-unit" placeholder="회 / 일"></div>
     </div>
     <button class="btn" id="g-save" onclick="saveGoal()">추가하기</button>
+    <button class="btn line danger-ghost mt8" id="g-del" onclick="deleteGoalNow()" hidden>목표 삭제</button>
     <button class="btn line mt8" onclick="closeModal('m-goal')">닫기</button>
   </div>
 </div>
@@ -62,7 +64,7 @@
 <script src="assets/api.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  let ENR, CUR = null;
+  let ENR, CUR = null, GOALS = [], EDIT_ID = null;
 
   (async function init() {
     document.getElementById('add').innerHTML = icon('plus', 20);
@@ -75,19 +77,28 @@
         '<section class="card" style="text-align:center;padding:28px 18px;"><p class="small muted" style="margin:0;">코치와 연결되면 목표를 설정할 수 있어요.</p></section>';
       return;
     }
+    renderMainGoal();
     await load();
   })();
 
+  function renderMainGoal() {
+    document.getElementById('main-goal').innerHTML = `
+      <section class="card hero" style="margin-bottom:14px;">
+        <span class="eyebrow">메인 목표 · 오늘의 미션</span>
+        <h2 style="margin:6px 0 0;">${ENR.goal_summary || '코치가 메인 목표를 설정해드릴 거예요'}</h2>
+        <p class="small" style="opacity:.85;margin:8px 0 0;">메인 목표는 코치가 설정/수정합니다.</p>
+      </section>`;
+  }
+
   async function load() {
-    const goals = await API.goals(ENR.id);
-    if (!goals.length) {
+    GOALS = await API.goals(ENR.id);
+    if (!GOALS.length) {
       document.getElementById('goals').innerHTML =
-        '<section class="card" style="text-align:center;padding:24px 18px;"><p class="small muted" style="margin:0;">아직 목표가 없어요. 아래에서 추가해보세요.</p></section>';
+        '<section class="card" style="text-align:center;padding:24px 18px;"><p class="small muted" style="margin:0;">아직 서브 목표가 없어요. 아래에서 추가해보세요.</p></section>';
       return;
     }
-    document.getElementById('goals').innerHTML = goals.map(g => {
+    document.getElementById('goals').innerHTML = GOALS.map(g => {
       const pct = Math.min(100, Math.round(g.current_value / g.target_value * 100));
-      const title = g.title.replace(/'/g, "\\'");
       return `<section class="card">
         <div class="between" style="margin-bottom:12px;">
           <span class="card-title">${g.title}</span>
@@ -96,7 +107,10 @@
         <div class="progress warm" style="margin-bottom:8px;"><i style="width:${pct}%"></i></div>
         <div class="between">
           <span class="small muted">${g.current_value} / ${g.target_value}${g.unit || ''}</span>
-          <button class="btn sm warm" onclick="openCheck('${g.id}','${title}')">＋ 기록</button>
+          <div class="row" style="gap:6px;">
+            <button class="btn sm line" onclick="openEditGoal('${g.id}')">수정</button>
+            <button class="btn sm warm" onclick="openCheck('${g.id}')">＋ 기록</button>
+          </div>
         </div>
         <div class="row mt12" style="gap:6px;">
           ${[1,2,3,4].map(w => `<div style="flex:1;text-align:center;padding:7px 0;border-radius:10px;background:var(--surface-2);border:1px solid var(--line);font-size:11px;font-weight:700;color:${w <= Math.ceil(pct/25) ? 'var(--accent)' : 'var(--muted)'};">${w}주차</div>`).join('')}
@@ -105,12 +119,47 @@
     }).join('');
   }
 
-  function openCheck(id, title) {
+  function openCheck(id) {
     CUR = id;
-    document.getElementById('c-title').textContent = title;
+    const g = GOALS.find(x => x.id === id);
+    document.getElementById('c-title').textContent = g ? g.title : '목표';
     document.getElementById('c-value').value = '';
     document.getElementById('c-note').value = '';
     openModal('m-check');
+  }
+
+  function openAddGoal() {
+    EDIT_ID = null;
+    document.getElementById('g-modal-title').textContent = '새 서브 목표';
+    document.getElementById('g-save').textContent = '추가하기';
+    document.getElementById('g-del').hidden = true;
+    document.getElementById('g-title').value = '';
+    document.getElementById('g-target').value = '';
+    document.getElementById('g-unit').value = '';
+    openModal('m-goal');
+  }
+
+  function openEditGoal(id) {
+    const g = GOALS.find(x => x.id === id); if (!g) return;
+    EDIT_ID = id;
+    document.getElementById('g-modal-title').textContent = '서브 목표 수정';
+    document.getElementById('g-save').textContent = '저장하기';
+    document.getElementById('g-del').hidden = false;
+    document.getElementById('g-title').value = g.title;
+    document.getElementById('g-target').value = g.target_value;
+    document.getElementById('g-unit').value = g.unit || '';
+    openModal('m-goal');
+  }
+
+  async function deleteGoalNow() {
+    if (!EDIT_ID) return;
+    if (!confirm('이 목표를 삭제할까요? 기록도 함께 사라집니다.')) return;
+    const btn = document.getElementById('g-del'); btn.disabled = true;
+    try {
+      await API.deleteGoal(EDIT_ID);
+      closeModal('m-goal'); toast('목표를 삭제했어요'); await load();
+    } catch (e) { toast(e.message || '삭제 실패'); }
+    finally { btn.disabled = false; }
   }
 
   async function saveCheckin() {
@@ -131,16 +180,19 @@
     const unit = document.getElementById('g-unit').value.trim() || '회';
     if (!title) return toast('목표 이름을 입력해주세요');
     if (!target) return toast('목표치를 입력해주세요');
-    const btn = document.getElementById('g-save'); btn.disabled = true; btn.textContent = '추가 중…';
+    const btn = document.getElementById('g-save'); const label = btn.textContent;
+    btn.disabled = true; btn.textContent = '저장 중…';
     try {
-      await API.addGoal(ENR.id, title, target, unit);
-      closeModal('m-goal');
-      document.getElementById('g-title').value = '';
-      document.getElementById('g-target').value = '';
-      document.getElementById('g-unit').value = '';
-      toast('목표를 추가했어요'); await load();
-    } catch (e) { toast(e.message || '추가 실패'); }
-    finally { btn.disabled = false; btn.textContent = '추가하기'; }
+      if (EDIT_ID) {
+        await API.updateGoal(EDIT_ID, title, target, unit);
+        toast('목표를 수정했어요');
+      } else {
+        await API.addGoal(ENR.id, title, target, unit);
+        toast('목표를 추가했어요');
+      }
+      closeModal('m-goal'); await load();
+    } catch (e) { toast(e.message || '저장 실패'); }
+    finally { btn.disabled = false; btn.textContent = label; }
   }
 </script>
 </body>
