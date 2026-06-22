@@ -12,37 +12,13 @@
   <header class="topbar">
     <div class="brand"><span class="dot"></span> 30일 여정</div>
     <div class="spacer"></div>
-    <button class="ico-btn" id="info" onclick="toast('코치: 민지 코치')"></button>
+    <button class="ico-btn" id="info" onclick="toast('내 30일 미션 현황')"></button>
   </header>
 
   <main class="page">
     <h1 class="page-title">나의 30일 트래커</h1>
     <p class="page-sub">매일의 미션을 한눈에. 칸을 눌러 그날 기록을 볼 수 있어요.</p>
-
-    <section class="card">
-      <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
-        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--primary);"></i> 완료</span>
-        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:#E6D49A;"></i> 검토중</span>
-        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--danger);"></i> 놓침</span>
-        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;border:2px dashed var(--primary);"></i> 오늘</span>
-        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--line);"></i> 예정</span>
-      </div>
-      <div class="tracker" id="tracker"></div>
-    </section>
-
-    <section class="card">
-      <div class="card-title" style="margin-bottom:14px;">요약</div>
-      <div class="kpi-row">
-        <div class="kpi"><div class="n" style="color:var(--primary);">9</div><div class="l">완료</div></div>
-        <div class="kpi"><div class="n" style="color:var(--gold);">1</div><div class="l">검토중</div></div>
-        <div class="kpi"><div class="n" style="color:var(--danger);">1</div><div class="l">놓침</div></div>
-      </div>
-      <div class="between mt8">
-        <span class="small muted">현재 이행률</span>
-        <span style="font-weight:800;color:var(--primary-d);">83%</span>
-      </div>
-      <div class="progress mt8"><i style="width:83%"></i></div>
-    </section>
+    <div id="content"><p class="small muted">불러오는 중…</p></div>
   </main>
 
   <div id="tabbar-slot"></div>
@@ -53,43 +29,112 @@
   <div class="modal">
     <div class="grip"></div>
     <div class="between" style="margin-bottom:14px;">
-      <h3 style="margin:0;font-size:17px;font-weight:800;">DAY <span id="d-num">12</span></h3>
-      <span id="d-badge" class="badge ok">완료</span>
+      <h3 style="margin:0;font-size:17px;font-weight:800;">DAY <span id="d-num"></span></h3>
+      <span id="d-badge" class="badge muted"></span>
     </div>
     <div class="field"><label>미션</label>
-      <div class="card flat" style="margin:0;background:var(--surface-2);">아침 10분 산책하고 사진 남기기</div>
+      <div class="card flat" style="margin:0;background:var(--surface-2);" id="d-mission"></div>
     </div>
-    <div id="d-photo" class="field">
+    <div id="d-photo-wrap" class="field" hidden>
       <label>인증 사진</label>
-      <div style="aspect-ratio:16/10;border-radius:14px;background:linear-gradient(135deg,#DCE8E3,#EFE6DA);display:grid;place-items:center;color:var(--muted);" class="small">인증 이미지</div>
+      <div id="d-photo" style="aspect-ratio:16/10;border-radius:14px;background:var(--surface-2);display:grid;place-items:center;color:var(--muted);overflow:hidden;" class="small"></div>
     </div>
-    <div class="field" style="margin-bottom:8px;"><label>코치 코멘트</label>
-      <div class="small" style="color:var(--muted);">"가벼운 시작 좋아요."</div>
+    <div id="d-note-wrap" class="field" style="margin-bottom:8px;" hidden><label>코치 코멘트</label>
+      <div class="small" style="color:var(--muted);" id="d-note"></div>
     </div>
     <button class="btn line" onclick="closeModal('m-day')">닫기</button>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/api.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  document.getElementById('info').innerHTML = icon('info', 19);
-  const labels = { done:['완료','ok'], wait:['검토중','wait'], fail:['놓침','fail'], today:['오늘','wait'], locked:['예정','muted'] };
-  const grid = document.getElementById('tracker');
-  grid.innerHTML = MOCK.tracker.map((s,i)=>{
-    const mk = { done:'✓', wait:'·', fail:'✕', today:'·', locked:'' }[s];
-    return `<div class="cell ${s}" data-i="${i+1}" data-s="${s}">${i+1}<span class="mk">${mk}</span></div>`;
-  }).join('');
-  grid.querySelectorAll('.cell').forEach(c=>{
-    c.onclick=()=>{
-      if(c.dataset.s==='locked'){ toast('아직 잠긴 날이에요'); return; }
-      document.getElementById('d-num').textContent = c.dataset.i;
-      const [txt,cls] = labels[c.dataset.s];
-      const b = document.getElementById('d-badge'); b.textContent = txt; b.className = 'badge '+cls;
-      document.getElementById('d-photo').style.display = (c.dataset.s==='fail'||c.dataset.s==='today')?'none':'block';
-      openModal('m-day');
-    };
-  });
-  document.getElementById('tabbar-slot').innerHTML = renderTabbar('tracker');
+  const MAP = { approved:['done','완료','ok','✓'], pending_review:['wait','검토중','wait','·'],
+                failed:['fail','놓침','fail','✕'], today:['today','오늘','wait','·'],
+                locked:['locked','예정','muted',''], skipped:['locked','건너뜀','muted',''] };
+  let TASKS = [];
+
+  (async function init() {
+    document.getElementById('info').innerHTML = icon('info', 19);
+    document.getElementById('tabbar-slot').innerHTML = renderTabbar('tracker');
+    const me = await API.guard('member'); if (!me) return;
+    const enr = await API.myEnrollment();
+    if (!enr) { waiting(); return; }
+    TASKS = await API.tracker(enr.id);
+    render();
+  })();
+
+  function waiting() {
+    document.getElementById('content').innerHTML = `
+      <section class="card" style="text-align:center;padding:32px 18px;">
+        <div style="font-weight:800;font-size:16px;margin-bottom:8px;">아직 30일이 시작되지 않았어요</div>
+        <p class="small muted" style="margin:0;">코치가 연결해드리면 트래커가 채워집니다.</p>
+      </section>`;
+  }
+
+  function render() {
+    const done = TASKS.filter(t => t.status==='approved').length;
+    const wait = TASKS.filter(t => t.status==='pending_review').length;
+    const fail = TASKS.filter(t => t.status==='failed').length;
+    const elapsed = done + wait + fail || 1;
+    const rate = Math.round(done/elapsed*100);
+    const cells = TASKS.map(t => {
+      const [cls,,,mk] = MAP[t.status] || MAP.locked;
+      return `<div class="cell ${cls}" data-day="${t.day_number}">${t.day_number}<span class="mk">${mk}</span></div>`;
+    }).join('');
+
+    document.getElementById('content').innerHTML = `
+      <section class="card">
+        <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+          <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--primary);"></i> 완료</span>
+          <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:#E6D49A;"></i> 검토중</span>
+          <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--danger);"></i> 놓침</span>
+          <span class="chip"><i style="width:9px;height:9px;border-radius:3px;border:2px dashed var(--primary);"></i> 오늘</span>
+          <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--line);"></i> 예정</span>
+        </div>
+        <div class="tracker" id="tracker">${cells}</div>
+      </section>
+      <section class="card">
+        <div class="card-title" style="margin-bottom:14px;">요약</div>
+        <div class="kpi-row">
+          <div class="kpi"><div class="n" style="color:var(--primary);">${done}</div><div class="l">완료</div></div>
+          <div class="kpi"><div class="n" style="color:var(--gold);">${wait}</div><div class="l">검토중</div></div>
+          <div class="kpi"><div class="n" style="color:var(--danger);">${fail}</div><div class="l">놓침</div></div>
+        </div>
+        <div class="between mt8"><span class="small muted">현재 이행률</span>
+          <span style="font-weight:800;color:var(--primary-d);">${rate}%</span></div>
+        <div class="progress mt8"><i style="width:${rate}%"></i></div>
+      </section>`;
+
+    document.querySelectorAll('#tracker .cell').forEach(c => {
+      c.onclick = () => openDay(+c.dataset.day);
+    });
+  }
+
+  async function openDay(day) {
+    const t = TASKS.find(x => x.day_number === day);
+    if (!t || t.status === 'locked') { toast('아직 잠긴 날이에요'); return; }
+    const [,label,cls] = MAP[t.status] || MAP.locked;
+    document.getElementById('d-num').textContent = day;
+    const b = document.getElementById('d-badge'); b.textContent = label; b.className = 'badge ' + cls;
+    document.getElementById('d-mission').textContent = t.mission;
+
+    const noteWrap = document.getElementById('d-note-wrap');
+    if (t.review_note) { document.getElementById('d-note').textContent = t.review_note; noteWrap.hidden = false; }
+    else noteWrap.hidden = true;
+
+    const pw = document.getElementById('d-photo-wrap');
+    if (t.proof_url) {
+      pw.hidden = false;
+      const box = document.getElementById('d-photo'); box.innerHTML = '불러오는 중…';
+      const { data } = await sb.storage.from('proofs').createSignedUrl(t.proof_url, 600);
+      box.innerHTML = data?.signedUrl ? `<img src="${data.signedUrl}" style="width:100%;height:100%;object-fit:cover;">` : '이미지 없음';
+    } else pw.hidden = true;
+
+    openModal('m-day');
+  }
 </script>
 </body>
 </html>

@@ -142,4 +142,4 @@ function lineChart(series, opts = {}) {
   return svg;
 }
 
-console.log('[이음] mock 모드 — Supabase 미연동');
+// 참고: 아래 MOCK 객체는 더 이상 사용하지 않습니다(레이아웃 참고용). 모든 페이지는 API(Supabase) 연동.

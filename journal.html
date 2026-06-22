@@ -33,8 +33,8 @@
 
     <section class="card">
       <div class="grid2">
-        <div class="center"><div style="font-weight:800;font-size:22px;color:var(--primary);">3.4</div><div class="small muted">평균 기분</div></div>
-        <div class="center"><div style="font-weight:800;font-size:22px;color:var(--accent);">3.0</div><div class="small muted">평균 에너지</div></div>
+        <div class="center"><div style="font-weight:800;font-size:22px;color:var(--primary);" id="avg-mood">–</div><div class="small muted">평균 기분</div></div>
+        <div class="center"><div style="font-weight:800;font-size:22px;color:var(--accent);" id="avg-energy">–</div><div class="small muted">평균 에너지</div></div>
       </div>
     </section>
 
@@ -55,34 +55,92 @@
     <div class="field"><label>기분 (1~5)</label>
       <div class="mood-row" id="w-mood"></div>
     </div>
-    <div class="field"><label>오늘 있었던 일 / 느낀 점</label>
-      <textarea placeholder="떠오르는 대로 편하게 적어보세요"></textarea>
+    <div class="field"><label>에너지 (1~5)</label>
+      <div class="mood-row" id="w-energy"></div>
     </div>
-    <button class="btn" onclick="closeModal('m-write');toast('일지를 저장했어요')">저장하기</button>
+    <div class="field"><label>오늘 있었던 일 / 느낀 점</label>
+      <textarea id="w-note" placeholder="떠오르는 대로 편하게 적어보세요"></textarea>
+    </div>
+    <button class="btn" id="w-save" onclick="saveJournal()">저장하기</button>
     <button class="btn line mt8" onclick="closeModal('m-write')">닫기</button>
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/api.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  document.getElementById('write').innerHTML = icon('edit', 19);
-  document.getElementById('chart').innerHTML = lineChart([MOCK.mood, MOCK.energy]);
-
-  const sampleNotes = [
-    { d:'오늘',   m:4, t:'산책하고 나니 머리가 맑아졌다. 생각보다 괜찮은 하루.' },
-    { d:'어제',   m:3, t:'무난한 하루. 저녁에 조금 피곤했다.' },
-    { d:'2일 전', m:2, t:'일이 많아 지쳤다. 잠이 부족한 듯.' },
-    { d:'3일 전', m:4, t:'친구를 만나서 기분이 좋았다.' },
-  ];
   const moodColor = ['#D9755B','#E89B72','#C9B873','#7DA697','#4F7C72'];
-  document.getElementById('entries').innerHTML = sampleNotes.map(n=>`
-    <div class="list-item">
-      <div class="avatar" style="background:${moodColor[n.m-1]}1f;color:${moodColor[n.m-1]};">${n.m}</div>
-      <div class="meta"><div class="nm">${n.d} · ${MOOD_LABELS[n.m-1]}</div><div class="sub">${n.t}</div></div>
-    </div>`).join('');
+  let ENR, PICK_M = null, PICK_E = null;
 
-  bindMood(document.getElementById('w-mood'));
-  document.getElementById('tabbar-slot').innerHTML = renderTabbar('journal');
+  (async function init() {
+    document.getElementById('write').innerHTML = icon('edit', 19);
+    document.getElementById('tabbar-slot').innerHTML = renderTabbar('journal');
+    bindMood(document.getElementById('w-mood'),   v => PICK_M = v);
+    bindMood(document.getElementById('w-energy'), v => PICK_E = v);
+
+    const me = await API.guard('member'); if (!me) return;
+    ENR = await API.myEnrollment();
+    if (!ENR) { empty(); return; }
+    await load();
+  })();
+
+  function empty() {
+    document.getElementById('write').style.display = 'none';
+    document.getElementById('chart').innerHTML =
+      '<p class="small muted center" style="padding:24px 0;">30일이 시작되면 기록이 쌓여요.</p>';
+    document.getElementById('entries').innerHTML =
+      '<p class="small muted" style="margin:0;">아직 작성한 일지가 없어요.</p>';
+  }
+
+  async function load() {
+    const logs = await API.moodAll(ENR.id);
+    if (!logs.length) {
+      document.getElementById('chart').innerHTML =
+        '<p class="small muted center" style="padding:24px 0;">첫 일지를 남겨보세요.</p>';
+      document.getElementById('entries').innerHTML =
+        '<p class="small muted" style="margin:0;">아직 작성한 일지가 없어요.</p>';
+      document.getElementById('avg-mood').textContent = '–';
+      document.getElementById('avg-energy').textContent = '–';
+      return;
+    }
+
+    const recent = logs.slice(-14);
+    const moods   = recent.map(l => l.mood);
+    const energy  = recent.map(l => l.energy ?? l.mood);
+    document.getElementById('chart').innerHTML = lineChart([moods, energy]);
+
+    const avg = arr => Math.round(arr.reduce((s, v) => s + v, 0) / arr.length * 10) / 10;
+    document.getElementById('avg-mood').textContent = avg(moods);
+    document.getElementById('avg-energy').textContent = avg(energy);
+
+    document.getElementById('entries').innerHTML = logs.slice().reverse().map(l => {
+      const md = l.date.slice(5).replace('-', '.');
+      const c = moodColor[l.mood - 1];
+      return `<div class="list-item">
+        <div class="avatar" style="background:${c}1f;color:${c};">${l.mood}</div>
+        <div class="meta"><div class="nm">${md} · ${MOOD_LABELS[l.mood - 1]}</div>
+          <div class="sub">${l.note ? l.note : '<span class="muted">기록만 남김</span>'}</div></div>
+      </div>`;
+    }).join('');
+  }
+
+  async function saveJournal() {
+    if (!PICK_M) return toast('기분을 먼저 골라주세요');
+    const note = document.getElementById('w-note').value;
+    const btn = document.getElementById('w-save'); btn.disabled = true; btn.textContent = '저장 중…';
+    try {
+      await API.logMood(ENR.id, PICK_M, PICK_E, note);
+      closeModal('m-write');
+      document.getElementById('w-note').value = '';
+      document.querySelectorAll('#w-mood .mood-opt, #w-energy .mood-opt').forEach(o => o.classList.remove('on'));
+      PICK_M = PICK_E = null;
+      toast('일지를 저장했어요');
+      await load();
+    } catch (e) { toast(e.message || '저장 실패'); }
+    finally { btn.disabled = false; btn.textContent = '저장하기'; }
+  }
 </script>
 </body>
 </html>

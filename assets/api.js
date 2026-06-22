@@ -94,6 +94,13 @@ const API = {
       .order('date', { ascending: true }).limit(days);
     return data || [];
   },
+  // 일지 전체 (note 포함, 오래된 → 최신 순)
+  async moodAll(enrollmentId) {
+    const { data } = await sb.from('mood_logs')
+      .select('date, mood, energy, note').eq('enrollment_id', enrollmentId)
+      .order('date', { ascending: true });
+    return data || [];
+  },
 
   async goals(enrollmentId) {
     const { data } = await sb.from('goals')
