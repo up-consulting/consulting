@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>로그인 — 이음</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app" style="display:flex;flex-direction:column;min-height:100vh;padding-bottom:0;">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;padding:40px 28px;">
+    <div style="width:48px;height:48px;border-radius:15px;background:var(--primary);position:relative;margin-bottom:22px;">
+      <span style="position:absolute;inset:14px;border:3px solid rgba(255,255,255,.9);border-radius:5px;"></span>
+    </div>
+    <h1 style="font-size:26px;font-weight:800;letter-spacing:-0.03em;margin:0 0 6px;">다시 만나서 반가워요</h1>
+    <p class="muted" style="margin:0 0 28px;">이메일로 로그인하세요.</p>
+
+    <div class="field"><label>이메일</label><input id="email" type="email" placeholder="you@example.com" autocomplete="email"></div>
+    <div class="field"><label>비밀번호</label><input id="pw" type="password" placeholder="••••••••" autocomplete="current-password"></div>
+
+    <button class="btn block mt8" id="go" onclick="doLogin()">로그인</button>
+    <p class="center muted small mt16">계정이 없으세요? <a href="signup.html" style="color:var(--primary);font-weight:700;">시작하기</a></p>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  if (!CONFIG_OK) location.href = 'setup.html';
+  async function route() {
+    const me = await API.me();
+    if (!me) return;
+    location.href = ['coach','admin'].includes(me.role) ? 'admin.html' : 'home.html';
+  }
+  async function doLogin() {
+    const email = email_(), pw = document.getElementById('pw').value;
+    if (!email || !pw) return toast('이메일과 비밀번호를 입력하세요');
+    const btn = document.getElementById('go'); btn.disabled = true; btn.textContent = '로그인 중…';
+    try { await API.signIn(email, pw); await route(); }
+    catch (e) { toast(e.message || '로그인 실패'); btn.disabled = false; btn.textContent = '로그인'; }
+  }
+  function email_(){ return document.getElementById('email').value.trim(); }
+  document.getElementById('pw').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+</script>
+</body>
+</html>

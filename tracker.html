@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>30일 — 이음</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> 30일 여정</div>
+    <div class="spacer"></div>
+    <button class="ico-btn" id="info" onclick="toast('코치: 민지 코치')"></button>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">나의 30일 트래커</h1>
+    <p class="page-sub">매일의 미션을 한눈에. 칸을 눌러 그날 기록을 볼 수 있어요.</p>
+
+    <section class="card">
+      <div class="row" style="justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:14px;">
+        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--primary);"></i> 완료</span>
+        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:#E6D49A;"></i> 검토중</span>
+        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--danger);"></i> 놓침</span>
+        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;border:2px dashed var(--primary);"></i> 오늘</span>
+        <span class="chip"><i style="width:9px;height:9px;border-radius:3px;background:var(--line);"></i> 예정</span>
+      </div>
+      <div class="tracker" id="tracker"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-title" style="margin-bottom:14px;">요약</div>
+      <div class="kpi-row">
+        <div class="kpi"><div class="n" style="color:var(--primary);">9</div><div class="l">완료</div></div>
+        <div class="kpi"><div class="n" style="color:var(--gold);">1</div><div class="l">검토중</div></div>
+        <div class="kpi"><div class="n" style="color:var(--danger);">1</div><div class="l">놓침</div></div>
+      </div>
+      <div class="between mt8">
+        <span class="small muted">현재 이행률</span>
+        <span style="font-weight:800;color:var(--primary-d);">83%</span>
+      </div>
+      <div class="progress mt8"><i style="width:83%"></i></div>
+    </section>
+  </main>
+
+  <div id="tabbar-slot"></div>
+</div>
+
+<!-- 날짜 상세 모달 -->
+<div class="modal-bg" id="m-day">
+  <div class="modal">
+    <div class="grip"></div>
+    <div class="between" style="margin-bottom:14px;">
+      <h3 style="margin:0;font-size:17px;font-weight:800;">DAY <span id="d-num">12</span></h3>
+      <span id="d-badge" class="badge ok">완료</span>
+    </div>
+    <div class="field"><label>미션</label>
+      <div class="card flat" style="margin:0;background:var(--surface-2);">아침 10분 산책하고 사진 남기기</div>
+    </div>
+    <div id="d-photo" class="field">
+      <label>인증 사진</label>
+      <div style="aspect-ratio:16/10;border-radius:14px;background:linear-gradient(135deg,#DCE8E3,#EFE6DA);display:grid;place-items:center;color:var(--muted);" class="small">인증 이미지</div>
+    </div>
+    <div class="field" style="margin-bottom:8px;"><label>코치 코멘트</label>
+      <div class="small" style="color:var(--muted);">"가벼운 시작 좋아요."</div>
+    </div>
+    <button class="btn line" onclick="closeModal('m-day')">닫기</button>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  document.getElementById('info').innerHTML = icon('info', 19);
+  const labels = { done:['완료','ok'], wait:['검토중','wait'], fail:['놓침','fail'], today:['오늘','wait'], locked:['예정','muted'] };
+  const grid = document.getElementById('tracker');
+  grid.innerHTML = MOCK.tracker.map((s,i)=>{
+    const mk = { done:'✓', wait:'·', fail:'✕', today:'·', locked:'' }[s];
+    return `<div class="cell ${s}" data-i="${i+1}" data-s="${s}">${i+1}<span class="mk">${mk}</span></div>`;
+  }).join('');
+  grid.querySelectorAll('.cell').forEach(c=>{
+    c.onclick=()=>{
+      if(c.dataset.s==='locked'){ toast('아직 잠긴 날이에요'); return; }
+      document.getElementById('d-num').textContent = c.dataset.i;
+      const [txt,cls] = labels[c.dataset.s];
+      const b = document.getElementById('d-badge'); b.textContent = txt; b.className = 'badge '+cls;
+      document.getElementById('d-photo').style.display = (c.dataset.s==='fail'||c.dataset.s==='today')?'none':'block';
+      openModal('m-day');
+    };
+  });
+  document.getElementById('tabbar-slot').innerHTML = renderTabbar('tracker');
+</script>
+</body>
+</html>

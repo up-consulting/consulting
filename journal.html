@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>일지 — 이음</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> 일지</div>
+    <div class="spacer"></div>
+    <button class="ico-btn" id="write" onclick="openModal('m-write')"></button>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">내 마음 추이</h1>
+    <p class="page-sub">최근 14일 동안의 기분과 에너지 흐름이에요.</p>
+
+    <section class="card">
+      <div class="card-head">
+        <span class="card-title">14일 추이</span>
+        <span class="small muted">1~5점</span>
+      </div>
+      <div id="chart"></div>
+      <div class="legend">
+        <span><i style="background:#4F7C72;"></i>기분</span>
+        <span><i style="background:#E89B72;"></i>에너지</span>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="grid2">
+        <div class="center"><div style="font-weight:800;font-size:22px;color:var(--primary);">3.4</div><div class="small muted">평균 기분</div></div>
+        <div class="center"><div style="font-weight:800;font-size:22px;color:var(--accent);">3.0</div><div class="small muted">평균 에너지</div></div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-title" style="margin-bottom:6px;">최근 일지</div>
+      <div id="entries"></div>
+    </section>
+  </main>
+
+  <div id="tabbar-slot"></div>
+</div>
+
+<!-- 일지 작성 모달 -->
+<div class="modal-bg" id="m-write">
+  <div class="modal">
+    <div class="grip"></div>
+    <h3 style="margin:0 0 16px;font-size:17px;font-weight:800;">오늘의 일지</h3>
+    <div class="field"><label>기분 (1~5)</label>
+      <div class="mood-row" id="w-mood"></div>
+    </div>
+    <div class="field"><label>오늘 있었던 일 / 느낀 점</label>
+      <textarea placeholder="떠오르는 대로 편하게 적어보세요"></textarea>
+    </div>
+    <button class="btn" onclick="closeModal('m-write');toast('일지를 저장했어요')">저장하기</button>
+    <button class="btn line mt8" onclick="closeModal('m-write')">닫기</button>
+  </div>
+</div>
+
+<script src="assets/app.js"></script>
+<script>
+  document.getElementById('write').innerHTML = icon('edit', 19);
+  document.getElementById('chart').innerHTML = lineChart([MOCK.mood, MOCK.energy]);
+
+  const sampleNotes = [
+    { d:'오늘',   m:4, t:'산책하고 나니 머리가 맑아졌다. 생각보다 괜찮은 하루.' },
+    { d:'어제',   m:3, t:'무난한 하루. 저녁에 조금 피곤했다.' },
+    { d:'2일 전', m:2, t:'일이 많아 지쳤다. 잠이 부족한 듯.' },
+    { d:'3일 전', m:4, t:'친구를 만나서 기분이 좋았다.' },
+  ];
+  const moodColor = ['#D9755B','#E89B72','#C9B873','#7DA697','#4F7C72'];
+  document.getElementById('entries').innerHTML = sampleNotes.map(n=>`
+    <div class="list-item">
+      <div class="avatar" style="background:${moodColor[n.m-1]}1f;color:${moodColor[n.m-1]};">${n.m}</div>
+      <div class="meta"><div class="nm">${n.d} · ${MOOD_LABELS[n.m-1]}</div><div class="sub">${n.t}</div></div>
+    </div>`).join('');
+
+  bindMood(document.getElementById('w-mood'));
+  document.getElementById('tabbar-slot').innerHTML = renderTabbar('journal');
+</script>
+</body>
+</html>

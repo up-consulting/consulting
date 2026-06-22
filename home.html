@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>홈 — 이음</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> 이음</div>
+    <div class="spacer"></div>
+    <button class="ico-btn" id="bell" onclick="toast('새 소식 없음')"></button>
+  </header>
+
+  <main class="page" id="main">
+    <p class="page-sub" id="greet">불러오는 중…</p>
+    <div id="content"></div>
+  </main>
+
+  <div id="tabbar-slot"></div>
+</div>
+
+<!-- 인증 제출 모달 -->
+<div class="modal-bg" id="m-submit">
+  <div class="modal">
+    <div class="grip"></div>
+    <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;">미션 인증</h3>
+    <p class="small muted" style="margin:0 0 16px;" id="m-task"></p>
+    <div class="field">
+      <label>사진</label>
+      <input type="file" id="proof-file" accept="image/*" style="font-size:13px;">
+    </div>
+    <div class="field"><label>한마디 (선택)</label><textarea id="proof-text" placeholder="오늘 미션을 하며 느낀 점"></textarea></div>
+    <button class="btn" id="submit-btn" onclick="submitProof()">제출하기</button>
+    <button class="btn line mt8" onclick="closeModal('m-submit')">닫기</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  let ME, ENR, TODAY;
+
+  (async function init() {
+    document.getElementById('bell').innerHTML = icon('bell', 19);
+    document.getElementById('tabbar-slot').innerHTML = renderTabbar('home');
+    ME = await API.guard('member');
+    if (!ME) return;
+
+    ENR = await API.myEnrollment();
+    document.getElementById('greet').innerHTML = `안녕하세요, <b>${ME.name}</b>님<br>오늘도 한 걸음, 같이 가요.`;
+
+    if (!ENR) { renderWaiting(); return; }
+    await renderHome();
+  })();
+
+  function renderWaiting() {
+    document.getElementById('content').innerHTML = `
+      <section class="card" style="text-align:center;padding:32px 18px;">
+        <div style="font-weight:800;font-size:17px;margin-bottom:8px;">코치 연결을 기다리고 있어요</div>
+        <p class="small muted" style="margin:0;">코치가 연결해드리면 30일 여정이 시작됩니다.<br>조금만 기다려주세요.</p>
+      </section>`;
+  }
+
+  async function renderHome() {
+    const tasks = await API.tracker(ENR.id);
+    TODAY = tasks.find(t => t.status === 'today');
+    const done = tasks.filter(t => t.status === 'approved').length;
+    const wait = tasks.filter(t => t.status === 'pending_review').length;
+    const fail = tasks.filter(t => t.status === 'failed').length;
+    const remain = tasks.filter(t => t.status === 'locked').length;
+    const elapsed = done + wait + fail || 1;
+    const rate = Math.round(done / elapsed * 100);
+    const dayNo = TODAY ? TODAY.day_number : (done + fail);
+    const goals = await API.goals(ENR.id);
+    const today = new Date().toISOString().slice(0, 10);
+    const myMood = await API.moodToday(ENR.id, today);
+
+    const heroBody = TODAY
+      ? `<h2>${TODAY.mission}</h2><button class="btn warm" onclick="openSubmit()">인증하기</button>`
+      : `<h2>오늘은 예정된 미션이 없어요</h2><p class="small" style="opacity:.85;margin:0;">내일 다시 만나요.</p>`;
+
+    document.getElementById('content').innerHTML = `
+      <section class="card hero">
+        <div class="between"><span class="eyebrow">오늘의 미션</span>
+          <span class="day-pill">DAY ${dayNo} / 30</span></div>
+        ${heroBody}
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-title">오늘 기분은 어때요?</span>
+          <span class="small muted" id="mood-label">${myMood ? '기록됨' : '선택해주세요'}</span></div>
+        <div class="mood-row" id="mood-row"></div>
+        <div class="field mt12" style="margin-bottom:0;">
+          <textarea id="mood-note" placeholder="한 줄로 오늘을 남겨보세요 (선택)" style="min-height:62px;">${myMood?.note || ''}</textarea></div>
+        <button class="btn ghost mt12" onclick="saveMood()">기분 기록하기</button>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-title">30일 여정</span>
+          <a href="tracker.html" class="small" style="color:var(--primary);font-weight:700;">전체 보기</a></div>
+        <div class="between" style="margin-bottom:8px;"><span class="small muted">이행률</span>
+          <span style="font-weight:800;color:var(--primary-d);">${rate}%</span></div>
+        <div class="progress"><i style="width:${rate}%"></i></div>
+        <div class="row mt16" style="justify-content:space-between;text-align:center;">
+          <div><div style="font-weight:800;font-size:18px;color:var(--primary);">${done}</div><div class="small muted">완료</div></div>
+          <div><div style="font-weight:800;font-size:18px;color:var(--gold);">${wait}</div><div class="small muted">검토중</div></div>
+          <div><div style="font-weight:800;font-size:18px;color:var(--danger);">${fail}</div><div class="small muted">놓침</div></div>
+          <div><div style="font-weight:800;font-size:18px;color:var(--muted);">${remain}</div><div class="small muted">남음</div></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><span class="card-title">이번 달 목표</span>
+          <a href="goals.html" class="small" style="color:var(--primary);font-weight:700;">관리</a></div>
+        <div id="goal-mini">${goals.length ? '' : '<p class="small muted" style="margin:0;">아직 목표가 없어요. 목표 탭에서 추가해보세요.</p>'}</div>
+      </section>`;
+
+    // 목표 미니
+    if (goals.length) document.getElementById('goal-mini').innerHTML = goals.map(g => {
+      const pct = Math.min(100, Math.round(g.current_value / g.target_value * 100));
+      return `<div style="margin-bottom:13px;"><div class="between" style="margin-bottom:6px;">
+        <span class="small" style="font-weight:700;">${g.title}</span>
+        <span class="small muted">${g.current_value}/${g.target_value}${g.unit||''}</span></div>
+        <div class="progress warm"><i style="width:${pct}%"></i></div></div>`;
+    }).join('');
+
+    // 기분 선택기
+    let picked = myMood?.mood || null;
+    bindMood(document.getElementById('mood-row'), v => {
+      picked = v; document.getElementById('mood-label').textContent = MOOD_LABELS[v - 1];
+    });
+    if (myMood) {
+      const opt = document.querySelector(`.mood-opt[data-v="${myMood.mood}"]`);
+      opt && opt.classList.add('on');
+    }
+    window.__pick = () => picked;
+  }
+
+  function openSubmit() {
+    document.getElementById('m-task').textContent = TODAY.mission;
+    openModal('m-submit');
+  }
+  async function submitProof() {
+    const file = document.getElementById('proof-file').files[0];
+    const text = document.getElementById('proof-text').value;
+    const btn = document.getElementById('submit-btn'); btn.disabled = true; btn.textContent = '제출 중…';
+    try {
+      await API.submitTask(TODAY, file, text);
+      closeModal('m-submit'); toast('인증 제출 완료 · 코치 확인을 기다려요');
+      await renderHome();
+    } catch (e) { toast(e.message || '제출 실패'); }
+    finally { btn.disabled = false; btn.textContent = '제출하기'; }
+  }
+  async function saveMood() {
+    const v = window.__pick && window.__pick();
+    if (!v) return toast('기분을 먼저 골라주세요');
+    const note = document.getElementById('mood-note').value;
+    try { await API.logMood(ENR.id, v, null, note); toast('오늘 기분을 기록했어요'); }
+    catch (e) { toast(e.message || '저장 실패'); }
+  }
+</script>
+</body>
+</html>

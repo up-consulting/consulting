@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>이음 — 30일 리추얼</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app" style="padding-bottom:0; display:flex; flex-direction:column; min-height:100vh;">
+
+  <div style="flex:1; display:flex; flex-direction:column; justify-content:center; padding:48px 28px;">
+
+    <div style="width:54px;height:54px;border-radius:16px;background:var(--primary);position:relative;margin-bottom:26px;box-shadow:var(--shadow-lg);">
+      <span style="position:absolute;inset:15px;border:3px solid rgba(255,255,255,.9);border-radius:6px;"></span>
+    </div>
+
+    <p style="font-size:14px;font-weight:700;color:var(--primary);letter-spacing:.04em;margin:0 0 8px;">30일 리추얼</p>
+    <h1 style="font-size:33px;font-weight:800;letter-spacing:-0.04em;line-height:1.2;margin:0 0 14px;">
+      매일 한 걸음,<br>30일이면 충분해
+    </h1>
+    <p class="muted" style="font-size:15.5px;line-height:1.65;margin:0 0 40px;">
+      매일의 작은 미션 하나, 오늘의 기분 한 줄,<br>
+      그리고 이번 달 목표. 꾸준히 쌓아가요.
+    </p>
+
+    <a href="signup.html" class="btn block" style="padding:16px;font-size:15.5px;">오늘부터 시작하기</a>
+    <a href="login.html" class="btn line block mt12" style="padding:15px;">이미 시작했어요 · 로그인</a>
+  </div>
+
+  <div style="padding:0 28px 40px;">
+    <div class="card flat" style="background:var(--primary-soft);border:none;display:flex;gap:13px;align-items:center;">
+      <div style="width:34px;height:34px;border-radius:11px;background:var(--surface);display:grid;place-items:center;color:var(--primary);flex-shrink:0;">
+        <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 13l4 4L19 7"/></svg>
+      </div>
+      <div class="small" style="color:var(--primary-d);font-weight:600;line-height:1.45;">
+        혼자 다짐하면 작심삼일. 함께 기록하면 30일.<br>오늘 한 칸을 채우는 것부터 시작해요.
+      </div>
+    </div>
+    <p class="center muted small" style="margin-top:22px;">
+      <a href="login.html" style="color:var(--muted);text-decoration:underline;text-underline-offset:3px;">운영자(코치)로 들어가기</a>
+    </p>
+  </div>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/api.js"></script>
+<script>
+  // 설정 전이면 안내, 이미 로그인 상태면 역할별 홈으로 자동 이동
+  (async () => {
+    if (!CONFIG_OK) { location.href = 'setup.html'; return; }
+    const me = await API.me();
+    if (me) location.href = ['coach','admin'].includes(me.role) ? 'admin.html' : 'home.html';
+  })();
+</script>
+</body>
+</html>

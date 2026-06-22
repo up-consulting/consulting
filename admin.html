@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>코치 패널 — 이음</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app wide" style="padding-bottom:28px;">
+
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> 코치 패널</div>
+    <div class="spacer"></div>
+    <span class="chip" id="coach-name">코치</span>
+    <button class="ico-btn" id="out" onclick="logout()"></button>
+  </header>
+
+  <main class="page">
+    <div class="seg" id="seg">
+      <button class="on" data-t="dash">대시보드</button>
+      <button data-t="review">검토 <span id="rv-ct"></span></button>
+      <button data-t="connect">멤버 연결</button>
+    </div>
+
+    <!-- 대시보드 -->
+    <section data-pane="dash">
+      <div class="kpi-row">
+        <div class="kpi"><div class="n" id="k-members">–</div><div class="l">함께하는 멤버</div></div>
+        <div class="kpi"><div class="n" id="k-alerts" style="color:var(--danger);">–</div><div class="l">살펴볼 신호</div></div>
+        <div class="kpi"><div class="n" id="k-reviews" style="color:var(--gold);">–</div><div class="l">검토 대기</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:12px;">살펴볼 신호</div>
+        <div id="alerts"><p class="small muted" style="margin:0;">불러오는 중…</p></div>
+      </div>
+      <div class="card">
+        <div class="card-head"><span class="card-title">함께하는 멤버</span><span class="small muted">이행률 · 평균기분</span></div>
+        <div id="members"></div>
+      </div>
+    </section>
+
+    <!-- 검토 -->
+    <section data-pane="review" hidden>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:6px;">미션 인증 검토</div>
+        <p class="small muted" style="margin:0 0 14px;">제출된 인증을 확인하고 승인 / 반려하세요.</p>
+        <div id="reviews"></div>
+      </div>
+    </section>
+
+    <!-- 멤버 연결 -->
+    <section data-pane="connect" hidden>
+      <div class="card">
+        <div class="card-title" style="margin-bottom:6px;">연결 대기 멤버</div>
+        <p class="small muted" style="margin:0 0 14px;">새로 가입한 멤버를 30일 여정에 연결하세요.</p>
+        <div id="unconnected"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- 검토 모달 -->
+<div class="modal-bg" id="m-review">
+  <div class="modal">
+    <div class="grip"></div>
+    <div class="between" style="margin-bottom:12px;">
+      <h3 style="margin:0;font-size:17px;font-weight:800;" id="r-name"></h3>
+      <span class="badge wait">검토 대기</span>
+    </div>
+    <div id="r-img" style="aspect-ratio:16/10;border-radius:14px;background:linear-gradient(135deg,#DCE8E3,#EFE6DA);display:grid;place-items:center;color:var(--muted);margin-bottom:14px;overflow:hidden;" class="small">이미지 없음</div>
+    <div class="field"><label>미션 / 멤버 메모</label><div class="card flat" style="margin:0;background:var(--surface-2);" id="r-task"></div></div>
+    <div class="field"><label>코멘트</label><textarea id="r-note" placeholder="응원 / 피드백 한마디"></textarea></div>
+    <div class="grid2">
+      <button class="btn line danger-ghost" onclick="doReview(false)">반려</button>
+      <button class="btn" onclick="doReview(true)">승인</button>
+    </div>
+  </div>
+</div>
+
+<!-- 연결 모달 -->
+<div class="modal-bg" id="m-connect">
+  <div class="modal">
+    <div class="grip"></div>
+    <h3 style="margin:0 0 4px;font-size:17px;font-weight:800;" id="c-name"></h3>
+    <p class="small muted" style="margin:0 0 16px;">오늘부터 30일 여정을 시작합니다.</p>
+    <div class="field"><label>이번 30일 목표 메모 (선택)</label><textarea id="c-goal" placeholder="예: 수면 루틴 안정화"></textarea></div>
+    <button class="btn" onclick="doConnect()">연결하고 시작</button>
+    <button class="btn line mt8" onclick="closeModal('m-connect')">닫기</button>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  let ME, REVIEWS = [], CUR_REVIEW = null, CUR_CONNECT = null;
+
+  (async function init() {
+    document.getElementById('out').innerHTML = icon('logout', 18);
+    ME = await API.guard('coach');
+    if (!ME) return;
+    document.getElementById('coach-name').textContent = ME.name;
+
+    document.getElementById('seg').addEventListener('click', e => {
+      const b = e.target.closest('button[data-t]'); if (!b) return;
+      document.querySelectorAll('#seg button').forEach(x => x.classList.remove('on')); b.classList.add('on');
+      document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== b.dataset.t);
+      window.scrollTo({ top: 0 });
+    });
+
+    await Promise.all([loadDash(), loadReviews(), loadConnect()]);
+  })();
+
+  async function loadDash() {
+    const [members, alerts] = await Promise.all([API.coachMembers(ME.id), API.alerts(ME.id)]);
+    document.getElementById('k-members').textContent = members.length;
+    document.getElementById('k-alerts').textContent = alerts.length;
+
+    document.getElementById('alerts').innerHTML = alerts.length ? alerts.map(a => `
+      <div class="alert ${a.severity === 'high' ? '' : 'warn'}">
+        <div><div class="t">${a.member?.name || '멤버'} · ${a.type === 'missed_streak' ? '미션 미제출' : '기분 하락'}</div>
+        <div class="d">${a.message}</div></div></div>`).join('')
+      : '<p class="small muted" style="margin:0;">지금은 특별히 살펴볼 신호가 없어요.</p>';
+
+    document.getElementById('members').innerHTML = members.length ? members.map(c => `
+      <div class="list-item">
+        <div class="avatar">${(c.member?.name || '?')[0]}</div>
+        <div class="meta"><div class="nm">${c.member?.name || '멤버'}</div>
+          <div class="sub">DAY ${c.day}/30 · 이행률 ${c.rate}% · 기분 ${c.moodAvg || '–'}</div></div>
+        <div style="width:64px;"><div class="progress" style="height:7px;"><i style="width:${c.rate}%"></i></div></div>
+      </div>`).join('')
+      : '<p class="small muted" style="margin:0;">아직 연결된 멤버가 없어요. ‘멤버 연결’ 탭에서 시작하세요.</p>';
+  }
+
+  async function loadReviews() {
+    REVIEWS = await API.pendingReviews(ME.id);
+    document.getElementById('rv-ct').textContent = REVIEWS.length || '';
+    document.getElementById('k-reviews').textContent = REVIEWS.length;
+    document.getElementById('reviews').innerHTML = REVIEWS.length ? REVIEWS.map((r, i) => `
+      <div class="list-item">
+        <div class="avatar warm">${(r.member?.name || '?')[0]}</div>
+        <div class="meta"><div class="nm">${r.member?.name || '멤버'} · DAY ${r.day_number}</div>
+          <div class="sub">${r.mission}</div></div>
+        <button class="btn sm" onclick="openReview(${i})">검토</button>
+      </div>`).join('')
+      : '<p class="small muted" style="margin:0;">검토 대기 중인 인증이 없어요.</p>';
+  }
+
+  async function loadConnect() {
+    const list = await API.unconnectedMembers();
+    document.getElementById('unconnected').innerHTML = list.length ? list.map((m, i) => `
+      <div class="list-item">
+        <div class="avatar">${m.name[0]}</div>
+        <div class="meta"><div class="nm">${m.name}</div><div class="sub">${m.email}</div></div>
+        <button class="btn sm" onclick="openConnect('${m.id}','${m.name.replace(/'/g,"")}')">연결</button>
+      </div>`).join('')
+      : '<p class="small muted" style="margin:0;">연결 대기 중인 멤버가 없어요.</p>';
+  }
+
+  async function openReview(i) {
+    CUR_REVIEW = REVIEWS[i];
+    document.getElementById('r-name').textContent = `${CUR_REVIEW.member?.name || '멤버'} · DAY ${CUR_REVIEW.day_number}`;
+    document.getElementById('r-task').textContent = CUR_REVIEW.mission + (CUR_REVIEW.proof_text ? ` — “${CUR_REVIEW.proof_text}”` : '');
+    document.getElementById('r-note').value = '';
+    const box = document.getElementById('r-img');
+    box.innerHTML = '이미지 불러오는 중…';
+    if (CUR_REVIEW.proof_url) {
+      const { data } = await sb.storage.from('proofs').createSignedUrl(CUR_REVIEW.proof_url, 600);
+      box.innerHTML = data?.signedUrl ? `<img src="${data.signedUrl}" style="width:100%;height:100%;object-fit:cover;">` : '이미지 없음';
+    } else box.innerHTML = '사진 없음 (텍스트 인증)';
+    openModal('m-review');
+  }
+  async function doReview(approve) {
+    try {
+      await API.reviewTask(CUR_REVIEW.id, approve, document.getElementById('r-note').value);
+      closeModal('m-review'); toast(approve ? '승인 완료' : '반려 처리');
+      await Promise.all([loadReviews(), loadDash()]);
+    } catch (e) { toast(e.message || '처리 실패'); }
+  }
+
+  function openConnect(id, name) { CUR_CONNECT = id; document.getElementById('c-name').textContent = `${name} 연결`; document.getElementById('c-goal').value = ''; openModal('m-connect'); }
+  async function doConnect() {
+    try {
+      await API.connectMember(CUR_CONNECT, ME.id, document.getElementById('c-goal').value);
+      closeModal('m-connect'); toast('연결 완료 · 30일 시작');
+      await Promise.all([loadConnect(), loadDash()]);
+    } catch (e) { toast(e.message || '연결 실패'); }
+  }
+  async function logout() { await API.signOut(); location.href = 'index.html'; }
+</script>
+</body>
+</html>
