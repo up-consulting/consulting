@@ -103,6 +103,8 @@
     const rate = Math.round(done / elapsed * 100);
     const dayNo = TODAY ? TODAY.day_number : (done + fail);
     const streak = currentStreak(tasks);
+    const stage = todayiStage(done);
+    const wilt = streak === 0 && fail > 0;
     const goals = await API.goals(ENR.id);
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }); // KST 기준
     const myMood = await API.moodToday(ENR.id, today);
@@ -114,6 +116,12 @@
       : `<h2>${missionText}</h2><p class="small" style="opacity:.85;margin:0;">오늘은 예정된 인증이 없어요.</p>`;
 
     document.getElementById('content').innerHTML = `
+      <section class="card" style="text-align:center;">
+        <div class="todayi-wrap">${todayiSvg(stage, { wilt })}</div>
+        <div style="font-weight:800;margin-top:4px;">오늘이 · ${TODAYI_LABELS[stage]}</div>
+        <div class="small muted" style="margin-top:2px;">${todayiMessage(stage, wilt)}</div>
+      </section>
+
       <section class="card hero">
         <div class="between"><span class="eyebrow">오늘의 미션</span>
           <div class="row" style="gap:6px;">

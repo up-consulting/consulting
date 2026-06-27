@@ -62,6 +62,13 @@ html.dark .topbar { background: linear-gradient(var(--bg) 70%, transparent); }
 html.dark .tabbar { background: rgba(20,24,26,.92); }
 html.dark .btn.line { background: var(--surface); }
 html.dark .badge-item { background: var(--surface-2); }
+html.dark .affirm { background: linear-gradient(135deg,#2E241D,#3A2A20); color:#F2B89C; }
+html.dark .streak-card { background: linear-gradient(135deg,#33271D,#3A2A20); border-color:#4A382C; }
+html.dark .streak-n { color:#F2B89C; }
+
+/* 마스코트 '오늘이' 둥실 애니메이션 */
+.todayi-wrap svg { animation: bob 3.2s ease-in-out infinite; }
+@keyframes bob { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-5px) } }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }

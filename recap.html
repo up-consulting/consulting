@@ -26,6 +26,7 @@
         <div style="font-size:13px;font-weight:700;opacity:.9;letter-spacing:.05em;">오늘일기 · 30일 리추얼</div>
         <div id="r-title" style="font-size:25px;font-weight:800;letter-spacing:-0.03em;margin:8px 0 2px;">나의 30일 리포트</div>
         <div id="r-name" class="small" style="opacity:.9;"></div>
+        <div id="r-char" style="margin:10px 0 -4px;"></div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0 18px;">
           <div style="background:rgba(255,255,255,.14);border-radius:16px;padding:16px;">
@@ -88,6 +89,8 @@
       if (t.status === 'approved') { run++; best = Math.max(best, run); } else if (t.status === 'failed') run = 0;
     });
 
+    document.getElementById('r-char').innerHTML =
+      `<div style="display:inline-block;background:rgba(255,255,255,.16);border-radius:22px;padding:6px;">${todayiSvg(todayiStage(stats.done), { size: 92 })}</div>`;
     document.getElementById('r-title').textContent = stats.day >= 30 ? '30일 완주 리포트 🏆' : `DAY ${stats.day} 리포트`;
     document.getElementById('r-rate').textContent = stats.rate + '%';
     document.getElementById('r-done').textContent = stats.done;

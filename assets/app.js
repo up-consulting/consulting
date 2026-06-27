@@ -142,6 +142,50 @@ function lineChart(series, opts = {}) {
   return svg;
 }
 
+/* ===== 마스코트 '오늘이' (SVG · 완료 미션 수에 따라 7단계 성장) ===== */
+const TODAYI_LABELS = ['씨앗', '떡잎', '새싹', '쑥쑥', '꽃봉오리', '활짝', '만개'];
+function todayiStage(done = 0) {
+  return done >= 30 ? 6 : done >= 22 ? 5 : done >= 14 ? 4 : done >= 7 ? 3 : done >= 3 ? 2 : done >= 1 ? 1 : 0;
+}
+function todayiMessage(stage, wilt) {
+  if (wilt) return '오늘이가 목말라 해요. 오늘 인증으로 물 주기 💧';
+  return ['씨앗을 심었어요. 첫 인증으로 깨워주세요!', '떡잎이 빼꼼 🌱', '새싹이 자라는 중!',
+    '쑥쑥 크고 있어요', '곧 꽃이 필 것 같아요', '꽃이 활짝 피었어요 🌸', '완전히 만개했어요! 🏆'][stage];
+}
+function todayiSvg(stage, opt = {}) {
+  const s = opt.size || 130;
+  const leaf = (x, y, r, sc, c) =>
+    `<path d="M0 0C9 -2 15 -11 13 -22C3 -18 -3 -9 0 0Z" transform="translate(${x} ${y}) rotate(${r}) scale(${sc})" fill="${c}"/>`;
+  const soil = '<ellipse cx="60" cy="101" rx="31" ry="7.5" fill="#E4D5BD"/><path d="M30 100c5 5 55 5 60 0 0 6-14 9-30 9s-35-3-30-9z" fill="#CDB893"/>';
+  const face = '<circle cx="53.5" cy="66" r="2.6" fill="#33403B"/><circle cx="66.5" cy="66" r="2.6" fill="#33403B"/>'
+    + '<path d="M55.5 72q4.5 3.6 9 0" stroke="#33403B" stroke-width="1.8" fill="none" stroke-linecap="round"/>'
+    + '<circle cx="48.5" cy="70.5" r="2.5" fill="#F1A88A" opacity=".75"/><circle cx="71.5" cy="70.5" r="2.5" fill="#F1A88A" opacity=".75"/>';
+  const body = '<path d="M60 95c-14 0-23-10-23-23 0-14 10-25 23-25s23 11 23 25c0 13-9 23-23 23z" fill="#7CAB9D"/>'
+    + '<path d="M60 95c-9 0-15-6-18-13 6 3 30 3 36 0-3 7-9 13-18 13z" fill="#6B9A8C" opacity=".45"/>' + face;
+  const flower = (cx, cy) => `<g transform="translate(${cx} ${cy})">`
+    + [0, 60, 120, 180, 240, 300].map(a => `<ellipse cx="0" cy="-11" rx="6.5" ry="9.5" fill="#F0A98A" transform="rotate(${a})"/>`).join('')
+    + '<circle r="6" fill="#F6C84C"/></g>';
+
+  let inner = soil;
+  if (stage === 0) {
+    inner += '<g transform="rotate(-14 60 90)"><ellipse cx="60" cy="89" rx="8.5" ry="11.5" fill="#B98A57"/>'
+      + '<path d="M60 79c4 3 5 9 2 15" stroke="#9C6E3D" stroke-width="1.6" fill="none"/></g>';
+    return `<svg viewBox="0 0 120 120" width="${s}" height="${s}">${inner}</svg>`;
+  }
+  // 줄기 + 잎 (단계별)
+  inner += '<path d="M60 96V52" stroke="#5E978A" stroke-width="4.5" stroke-linecap="round"/>';
+  if (stage >= 2) { inner += leaf(60, 78, -55, 0.8, '#5E978A') + leaf(60, 78, 235, -0.8, '#6BA091'); }
+  if (stage >= 3) { inner += leaf(60, 66, -45, 0.7, '#6BA091') + leaf(60, 66, 225, -0.7, '#5E978A'); }
+  inner += leaf(60, 51, -28, 0.85, '#6FA294') + leaf(60, 51, 208, -0.85, '#5E978A'); // 머리 잎(항상)
+  inner += body;
+  if (stage === 4) inner += '<path d="M60 40c-7 0-11-6-11-13 0-6 5-12 11-12s11 6 11 12c0 7-4 13-11 13z" fill="#8FBAAE"/><path d="M60 18c3 4 4 13 0 22" stroke="#E89B72" stroke-width="2" fill="none" opacity=".6"/>';
+  if (stage === 5) inner += flower(60, 36);
+  if (stage === 6) inner += flower(60, 34)
+    + '<text x="92" y="34" font-size="13" fill="#F6C84C">✦</text><text x="24" y="44" font-size="10" fill="#E89B72">✦</text><text x="86" y="60" font-size="9" fill="#7CAB9D">✦</text>';
+  const filt = opt.wilt ? ' style="filter:grayscale(.45) brightness(.97);"' : '';
+  return `<svg viewBox="0 0 120 120" width="${s}" height="${s}"${filt}>${inner}</svg>`;
+}
+
 /* 다크 모드 */
 function applyTheme() {
   document.documentElement.classList.toggle('dark', localStorage.getItem('theme') === 'dark');
