@@ -142,6 +142,18 @@ function lineChart(series, opts = {}) {
   return svg;
 }
 
+/* 다크 모드 */
+function applyTheme() {
+  document.documentElement.classList.toggle('dark', localStorage.getItem('theme') === 'dark');
+}
+function isDark() { return localStorage.getItem('theme') === 'dark'; }
+function toggleTheme() {
+  localStorage.setItem('theme', isDark() ? 'light' : 'dark');
+  applyTheme();
+  return isDark();
+}
+applyTheme();
+
 /* 현재 연속 인증(스트릭) — day_number 순서로 뒤에서부터 approved 연속 카운트 */
 function currentStreak(tasks) {
   const elapsed = (tasks || [])

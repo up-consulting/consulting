@@ -33,6 +33,36 @@
   --maxw: 460px;
 }
 
+/* ---------- 다크 모드 ---------- */
+html.dark {
+  --bg:        #14181A;
+  --surface:   #1E2528;
+  --surface-2: #242C2F;
+  --primary:   #6FA294;
+  --primary-d: #8FBAAE;
+  --primary-soft: #20302C;
+  --accent:    #E89B72;
+  --accent-soft:#3A2A20;
+  --text:      #E8EAE7;
+  --muted:     #939C98;
+  --line:      #2E3639;
+  --danger:    #E08869;
+  --danger-soft:#3A241D;
+  --gold:      #E2B23C;
+  --shadow:    0 1px 2px rgba(0,0,0,.3), 0 6px 18px rgba(0,0,0,.35);
+  --shadow-lg: 0 12px 36px rgba(0,0,0,.5);
+  --ring: 0 0 0 4px rgba(111,162,148,.22);
+}
+html.dark body {
+  background:
+    radial-gradient(900px 380px at 50% -8%, #1B2225 0%, rgba(27,34,37,0) 70%),
+    var(--bg);
+}
+html.dark .topbar { background: linear-gradient(var(--bg) 70%, transparent); }
+html.dark .tabbar { background: rgba(20,24,26,.92); }
+html.dark .btn.line { background: var(--surface); }
+html.dark .badge-item { background: var(--surface-2); }
+
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }
 body {

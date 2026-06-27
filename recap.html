@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark');</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>30일 리캡 — 오늘일기</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> 30일 리캡</div>
+    <div class="spacer"></div>
+    <a href="home.html" class="btn sm line">닫기</a>
+  </header>
+
+  <main class="page">
+    <p class="page-sub">한 장으로 보는 나의 30일. 친구에게 공유해보세요.</p>
+
+    <!-- 캡처 대상 카드 -->
+    <div id="card" style="border-radius:24px;overflow:hidden;background:linear-gradient(160deg,#5A8A7E 0%,#4F7C72 50%,#3C6359 100%);color:#fff;padding:30px 26px;position:relative;">
+      <div style="position:absolute;right:-40px;top:-50px;width:170px;height:170px;border-radius:50%;background:rgba(255,255,255,.10);"></div>
+      <div style="position:relative;">
+        <div style="font-size:13px;font-weight:700;opacity:.9;letter-spacing:.05em;">오늘일기 · 30일 리추얼</div>
+        <div id="r-title" style="font-size:25px;font-weight:800;letter-spacing:-0.03em;margin:8px 0 2px;">나의 30일 리포트</div>
+        <div id="r-name" class="small" style="opacity:.9;"></div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:24px 0 18px;">
+          <div style="background:rgba(255,255,255,.14);border-radius:16px;padding:16px;">
+            <div style="font-size:32px;font-weight:800;line-height:1;" id="r-rate">–</div>
+            <div class="small" style="opacity:.85;margin-top:4px;">이행률</div></div>
+          <div style="background:rgba(255,255,255,.14);border-radius:16px;padding:16px;">
+            <div style="font-size:32px;font-weight:800;line-height:1;" id="r-done">–</div>
+            <div class="small" style="opacity:.85;margin-top:4px;">완료한 미션</div></div>
+          <div style="background:rgba(255,255,255,.14);border-radius:16px;padding:16px;">
+            <div style="font-size:32px;font-weight:800;line-height:1;" id="r-streak">–</div>
+            <div class="small" style="opacity:.85;margin-top:4px;">최고 연속 🔥</div></div>
+          <div style="background:rgba(255,255,255,.14);border-radius:16px;padding:16px;">
+            <div style="font-size:32px;font-weight:800;line-height:1;" id="r-mood">–</div>
+            <div class="small" style="opacity:.85;margin-top:4px;">평균 기분</div></div>
+        </div>
+
+        <div style="background:rgba(255,255,255,.14);border-radius:16px;padding:14px 16px;">
+          <div class="small" style="opacity:.85;">메인 목표</div>
+          <div id="r-goal" style="font-weight:800;font-size:16px;margin-top:3px;">–</div>
+        </div>
+
+        <div class="between" style="margin-top:20px;align-items:flex-end;">
+          <div class="small" style="opacity:.8;" id="r-period"></div>
+          <div style="font-weight:800;font-size:14px;opacity:.95;">#오늘일기</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn warm mt16" id="share-btn" onclick="shareCard()">📤 이미지로 공유 / 저장</button>
+    <p class="center small muted mt12">공유가 안 되는 환경에서는 이미지가 다운로드됩니다.</p>
+  </main>
+
+  <div id="tabbar-slot"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  (async function init() {
+    document.getElementById('tabbar-slot').innerHTML = renderTabbar('profile');
+    const me = await API.guard('member'); if (!me) return;
+    document.getElementById('r-name').textContent = `${me.name} 님의 기록`;
+
+    const enr = await API.myEnrollment();
+    if (!enr) {
+      document.getElementById('r-title').textContent = '아직 시작 전이에요';
+      document.getElementById('share-btn').style.display = 'none';
+      return;
+    }
+    const [stats, tasks, logs] = await Promise.all([
+      API.enrollmentStats(enr.id), API.tracker(enr.id), API.moodAll(enr.id),
+    ]);
+
+    // 최고 연속(longest streak)
+    let best = 0, run = 0;
+    tasks.slice().sort((a, b) => a.day_number - b.day_number).forEach(t => {
+      if (t.status === 'approved') { run++; best = Math.max(best, run); } else if (t.status === 'failed') run = 0;
+    });
+
+    document.getElementById('r-title').textContent = stats.day >= 30 ? '30일 완주 리포트 🏆' : `DAY ${stats.day} 리포트`;
+    document.getElementById('r-rate').textContent = stats.rate + '%';
+    document.getElementById('r-done').textContent = stats.done;
+    document.getElementById('r-streak').textContent = best + '일';
+    document.getElementById('r-mood').textContent = stats.moodAvg || '–';
+    document.getElementById('r-goal').textContent = enr.goal_summary || '나의 30일 챌린지';
+    document.getElementById('r-period').textContent = `${enr.start_date} ~ ${enr.end_date} · 일지 ${logs.length}개`;
+  })();
+
+  async function shareCard() {
+    const btn = document.getElementById('share-btn');
+    btn.disabled = true; btn.textContent = '이미지 만드는 중…';
+    try {
+      const canvas = await html2canvas(document.getElementById('card'), { scale: 2, backgroundColor: null, useCORS: true });
+      const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+      const file = new File([blob], 'todayilgi-recap.png', { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: '오늘일기 30일 리캡', text: '나의 30일 기록 🌿 #오늘일기' });
+      } else {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob); a.download = '오늘일기-리캡.png'; a.click();
+        URL.revokeObjectURL(a.href);
+        toast('이미지를 저장했어요');
+      }
+    } catch (e) { toast('공유 취소 또는 실패'); }
+    finally { btn.disabled = false; btn.textContent = '📤 이미지로 공유 / 저장'; }
+  }
+</script>
+</body>
+</html>

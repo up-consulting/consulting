@@ -2,6 +2,7 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
+<script>if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark');</script>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>마이 — 오늘일기</title>
 <link rel="stylesheet" href="assets/style.css">
@@ -21,7 +22,7 @@
     <!-- 설정 -->
     <section class="card">
       <div class="card-title" style="margin-bottom:6px;">설정</div>
-      <div class="list-item"><div class="meta"><div class="nm">알림 받기</div></div><span class="chip" style="background:var(--primary-soft);color:var(--primary-d);border:none;">ON</span></div>
+      <div class="list-item" style="cursor:pointer;" onclick="flipTheme()"><div class="meta"><div class="nm">다크 모드</div></div><span class="chip" id="theme-state">OFF</span></div>
       <div class="list-item" style="cursor:pointer;" onclick="editAffirmation()"><div class="meta"><div class="nm">다짐 문구 바꾸기</div></div><span class="muted">›</span></div>
       <div class="list-item" style="cursor:pointer;" onclick="toast('문의: 3growthlab@gmail.com')"><div class="meta"><div class="nm">문의하기</div></div><span class="muted">›</span></div>
     </section>
@@ -39,9 +40,20 @@
 <script>
   let ME;
 
+  function paintThemeState() {
+    const el = document.getElementById('theme-state');
+    const on = isDark();
+    el.textContent = on ? 'ON' : 'OFF';
+    el.style.background = on ? 'var(--primary-soft)' : 'var(--surface-2)';
+    el.style.color = on ? 'var(--primary-d)' : 'var(--muted)';
+    el.style.border = 'none';
+  }
+  function flipTheme() { toggleTheme(); paintThemeState(); }
+
   (async function init() {
     document.getElementById('gear').innerHTML = icon('gear', 19);
     document.getElementById('tabbar-slot').innerHTML = renderTabbar('profile');
+    paintThemeState();
     ME = await API.guard('member'); if (!ME) return;
 
     const enr = await API.myEnrollment();
@@ -97,6 +109,7 @@
             <div class="kpi"><div class="n">${logs.length}</div><div class="l">일지 작성</div></div>
             <div class="kpi"><div class="n">${stats.moodAvg || '–'}</div><div class="l">평균 기분</div></div>
           </div>
+          <a href="recap.html" class="btn ghost mt12">📤 30일 리캡 카드 만들기</a>
         </section>`;
     }
 
