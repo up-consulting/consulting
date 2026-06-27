@@ -3,55 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <style>
-  @page { size: A4; margin: 15mm 14mm; }
+  @page { size: A4; margin: 11mm 12mm; }
   * { box-sizing: border-box; }
   body { font-family: 'Apple SD Gothic Neo','Pretendard','Malgun Gothic',sans-serif;
-    color: #262B29; line-height: 1.6; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  h1 { font-size: 24px; letter-spacing: -0.03em; margin: 0 0 6px; }
-  h2 { font-size: 19px; letter-spacing: -0.02em; margin: 30px 0 6px; padding-bottom: 6px;
-    border-bottom: 2px solid #4F7C72; color: #3C6359; }
-  h3 { font-size: 15.5px; margin: 18px 0 6px; color: #2E3A36; }
-  p, li { font-size: 13px; color: #3a423e; }
+    color: #262B29; line-height: 1.5; margin: 0; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 12.5px; }
+  h1 { font-size: 22px; letter-spacing: -0.03em; margin: 0; }
+  h2 { font-size: 17px; letter-spacing: -0.02em; margin: 18px 0 8px; padding-bottom: 5px;
+    border-bottom: 2px solid #4F7C72; color: #3C6359; break-after: avoid; }
+  h3 { font-size: 14px; margin: 0 0 5px; color: #2E3A36; }
+  p, li { font-size: 12px; color: #3a423e; margin: 4px 0; }
+  ul { margin: 4px 0; padding-left: 17px; }
+  li { margin: 2px 0; }
   .muted { color: #8B948F; }
-  .cover { height: 250mm; display: flex; flex-direction: column; justify-content: center;
-    page-break-after: always; }
-  .cover .logo { width: 60px; height: 60px; border-radius: 18px;
-    background: linear-gradient(135deg,#4F7C72,#3C6359); position: relative; margin-bottom: 22px; }
-  .cover .logo span { position: absolute; inset: 17px; border: 3px solid rgba(255,255,255,.9); border-radius: 6px; }
-  .cover h1 { font-size: 38px; }
-  .cover .sub { font-size: 16px; color: #4F7C72; font-weight: 700; margin-top: 8px; }
-  .cover .desc { font-size: 14px; color: #8B948F; margin-top: 18px; line-height: 1.8; }
-  .screen { display: flex; gap: 18px; align-items: flex-start; break-inside: avoid; margin: 16px 0 22px; }
-  .screen img { width: 215px; flex-shrink: 0; border: 1px solid #ECE8E0; border-radius: 14px; }
+  .cover { display: flex; align-items: center; gap: 14px; }
+  .cover .logo { width: 46px; height: 46px; border-radius: 14px; flex-shrink: 0;
+    background: linear-gradient(135deg,#4F7C72,#3C6359); position: relative; }
+  .cover .logo span { position: absolute; inset: 13px; border: 2.5px solid rgba(255,255,255,.9); border-radius: 5px; }
+  .cover .sub { font-size: 13px; color: #4F7C72; font-weight: 700; margin-top: 3px; }
+  .lead { background: #F1F5F3; border-radius: 10px; padding: 9px 13px; font-size: 12px; color: #44504b; margin: 10px 0 4px; }
+  .screen { display: flex; gap: 16px; align-items: flex-start; break-inside: avoid; margin: 10px 0; }
+  .screen img { width: 196px; flex-shrink: 0; border: 1px solid #ECE8E0; border-radius: 12px; }
   .screen .txt { flex: 1; }
-  .wide { break-inside: avoid; margin: 14px 0 22px; }
-  .wide img { width: 100%; border: 1px solid #ECE8E0; border-radius: 14px; }
-  .chip { display: inline-block; background: #E7F0ED; color: #3C6359; font-weight: 700;
-    font-size: 11px; padding: 2px 9px; border-radius: 999px; }
-  table { border-collapse: collapse; width: 100%; margin: 8px 0; font-size: 12.5px; }
-  th, td { border: 1px solid #ECE8E0; padding: 6px 9px; text-align: left; }
-  th { background: #FBFAF7; }
-  .note { background: #FBF3DE; border: 1px solid #EBDBA8; border-radius: 10px; padding: 10px 13px;
-    font-size: 12.5px; color: #7a6a2e; margin: 10px 0; }
+  .wide { break-inside: avoid; margin: 8px 0 12px; }
+  .wide img { width: 100%; border: 1px solid #ECE8E0; border-radius: 12px; }
   .sec { break-inside: avoid; }
-  ul { margin: 6px 0; padding-left: 18px; }
+  .chip { display: inline-block; background: #E7F0ED; color: #3C6359; font-weight: 700; font-size: 11px; padding: 1px 8px; border-radius: 999px; }
+  table { border-collapse: collapse; width: 100%; margin: 6px 0; font-size: 12px; }
+  th, td { border: 1px solid #ECE8E0; padding: 5px 8px; text-align: left; }
+  th { background: #FBFAF7; }
+  .note { background: #FBF3DE; border: 1px solid #EBDBA8; border-radius: 9px; padding: 8px 12px; font-size: 11.5px; color: #7a6a2e; margin: 8px 0; }
+  .charrow { display: grid; grid-template-columns: repeat(4,1fr); gap: 10px; break-inside: avoid; }
+  .charrow .c { border: 1px solid #ECE8E0; border-radius: 12px; padding: 8px; text-align: center; }
+  .charrow .c img { width: 100%; border-radius: 8px; }
+  .charrow .c b { font-size: 12px; }
+  .charrow .c .m { font-size: 10.5px; color: #4a544f; margin: 3px 0; line-height: 1.35; }
+  .charrow .c .cond { font-size: 10px; color: #8B948F; }
+  .wiltbox { display: flex; align-items: center; gap: 12px; border: 1px solid #ECE8E0; border-radius: 12px; padding: 10px 12px; margin-top: 10px; break-inside: avoid; background: #FBFAF7; }
+  .wiltbox img { width: 70px; border-radius: 8px; }
 </style>
 </head>
 <body>
 
-<!-- 표지 -->
 <div class="cover">
   <div class="logo"><span></span></div>
-  <h1>오늘일기 가이드북</h1>
-  <div class="sub">30일 코칭형 습관 · 일기 앱</div>
-  <div class="desc">멤버는 매일 미션을 인증하고 마음을 기록하고,<br>
-    코치는 곁에서 살펴보며 피드백합니다.<br>
-    — 멤버 / 코치 사용 가이드</div>
+  <div><h1>오늘일기 가이드북</h1><div class="sub">30일 코칭형 습관 · 일기 앱 — 멤버 / 코치 사용 가이드</div></div>
 </div>
+<div class="lead">멤버는 매일 미션을 인증하고 마음을 기록하고, 코치는 곁에서 살펴보며 피드백합니다. 아래 화면은 샘플 데이터 예시입니다.</div>
 
 <h2>1. 시작하기 — 가입</h2>
 <div class="sec">
-  <p>가입 화면에서 <b>멤버 / 코치</b>를 선택합니다.</p>
   <ul>
     <li><b>멤버로 시작</b> → 이름 + <b>담당 코치 이름</b> 입력 (코치 가입 이름과 정확히 일치해야 연결)</li>
     <li><b>코치로 시작</b> → 이름 입력 후 코치 패널로 진입</li>
@@ -62,12 +62,11 @@
 <h2>2. 멤버 가이드</h2>
 
 <div class="screen"><img src="screens/home.png">
-  <div class="txt"><h3>🏠 홈 — 오늘 할 일을 한눈에</h3>
-  <ul><li><b>오늘이 카드</b>: 미션 완료할수록 캐릭터가 성장 (탭 시 성장 가이드)</li>
+  <div class="txt"><h3>🏠 홈</h3>
+  <ul><li><b>오늘이</b>: 미션 완료할수록 캐릭터가 성장 (탭 시 성장 가이드)</li>
   <li><b>오늘의 미션</b>: 코치가 정한 메인 목표 — <span class="chip">인증하기</span>로 사진+메모 제출</li>
   <li><b>🔥 스트릭</b>: 연속 인증 일수</li>
-  <li><b>기분 기록</b>: 1~5점 + 한 줄</li>
-  <li><b>30일 여정</b>: 이행률·완료/검토중/놓침/남음</li></ul></div></div>
+  <li><b>기분 기록</b> + <b>30일 여정</b> 요약(이행률·완료/검토중/놓침/남음)</li></ul></div></div>
 
 <div class="screen"><img src="screens/tracker.png">
   <div class="txt"><h3>📅 30일 트래커</h3>
@@ -76,41 +75,37 @@
 
 <div class="screen"><img src="screens/journal.png">
   <div class="txt"><h3>📖 일지 — 기록 모아보기</h3>
-  <ul><li>최근 14일 <b>기분·에너지 추이 그래프</b> + 평균</li>
+  <ul><li>최근 14일 <b>기분·에너지 추이</b> + 평균</li>
   <li><b>누적 타임라인</b>: 하루 카드에 미션 인증·느낀점·코치 피드백이 함께</li>
-  <li>✎ 로 오늘 일지 작성 (기분/에너지/메모)</li></ul></div></div>
+  <li>✎ 로 오늘 일지 작성</li></ul></div></div>
 
 <div class="screen"><img src="screens/goals.png">
-  <div class="txt"><h3>🎯 목표 — 메인 + 서브</h3>
+  <div class="txt"><h3>🎯 목표</h3>
   <ul><li>상단: <b>메인 목표</b>(코치 설정, = 오늘의 미션)</li>
-  <li>아래: 내가 관리하는 <b>서브 목표</b> — 추가·수정·삭제 + 주차별 진척</li></ul></div></div>
+  <li>아래: <b>서브 목표</b> — 추가·수정·삭제 + 주차별 진척</li></ul></div></div>
 
 <div class="screen"><img src="screens/profile.png">
   <div class="txt"><h3>🙂 마이페이지</h3>
   <ul><li>프로필·다짐 문구·DAY/스트릭/이행률</li>
-  <li><b>배지 컬렉션</b>: 첫인증·7일연속·기록왕·성실러·절반·완주</li>
-  <li>이번 달 요약 + <b>30일 리캡 카드</b> 버튼, 설정(다크모드 등)</li></ul></div></div>
+  <li><b>배지 컬렉션</b> + 이번 달 요약</li>
+  <li><b>30일 리캡 카드</b> 버튼, 설정(다크모드 등)</li></ul></div></div>
 
 <div class="screen"><img src="screens/recap.png">
-  <div class="txt"><h3>📤 30일 리캡 카드 (공유용)</h3>
-  <ul><li>이행률·완료·최고 연속·평균 기분·메인 목표를 한 장으로</li>
+  <div class="txt"><h3>📤 30일 리캡 카드</h3>
+  <ul><li>이행률·완료·최고 연속·평균 기분을 한 장으로</li>
   <li>이미지로 저장/공유 → 인스타 스토리·카톡 등</li></ul></div></div>
 
 <h2>3. 코치 가이드</h2>
 
 <div class="wide"><h3>🧭 대시보드 — 내 멤버 한눈에</h3>
   <img src="screens/admin.png">
-  <ul><li>상단 탭: <b>대시보드 · 검토 · 멤버 연결</b></li>
-  <li>KPI: 함께하는 멤버 · 살펴볼 신호 · 검토 대기</li>
-  <li><b>살펴볼 신호</b>: 연속 미제출/기분 하락 자동 알림</li>
-  <li><b>멤버 목록</b>: 행을 누르면 상세로 이동</li></ul></div>
+  <ul><li>탭: <b>대시보드 · 검토 · 멤버 연결</b> / KPI: 멤버 수 · 살펴볼 신호 · 검토 대기</li>
+  <li><b>살펴볼 신호</b>(연속 미제출·기분 하락 자동) · 멤버 행 클릭 시 상세로</li></ul></div>
 
-<div class="wide"><h3>👤 멤버 상세 — 깊이 있게 관리</h3>
+<div class="wide"><h3>👤 멤버 상세</h3>
   <img src="screens/detail.png">
-  <ul><li><b>메인 목표 수정</b>(멤버 홈 미션으로 반영)</li>
-  <li>이행률·평균기분 · <b>30일 트래커</b> · 기분·에너지 추이 · 서브 목표</li>
-  <li><b>기록 타임라인</b>: 멤버 인증/느낀점/내 피드백</li>
-  <li><b>코치 노트</b>: 날짜 지정 상담·관찰 기록 + 다음 포커스</li></ul></div>
+  <ul><li><b>메인 목표 수정</b> · 이행률·평균기분 · 30일 트래커 · 기분 추이 · 서브 목표</li>
+  <li><b>기록 타임라인</b>(인증/느낀점/내 피드백) · <b>코치 노트</b>(날짜 지정)</li></ul></div>
 
 <div class="sec"><h3>✅ 검토 & 연결</h3>
   <ul><li><b>검토</b>: 올라온 인증을 사진과 함께 확인 → 승인/반려 + 코멘트(피드백)</li>
@@ -118,10 +113,15 @@
 
 <h2>4. 캐릭터 ‘오늘이’ 성장</h2>
 <div class="sec">
-  <p>미션을 완료할수록 캐릭터가 단계별로 자랍니다 (홈·리캡·성장가이드에 등장).</p>
-  <div class="note">⚠️ 캐릭터는 교체 예정입니다. 아래는 임시 버전이며, 새 캐릭터로 바꿀 수 있습니다.</div>
-  <img src="screens/character.png" style="width:100%;border:1px solid #ECE8E0;border-radius:14px;margin-top:6px;">
-  <p style="margin-top:8px;">성장 기준(누적 완료 미션): 씨앗(0) → 떡잎(1~2) → 새싹(3~6) → 쑥쑥(7~13) → 꽃봉오리(14~21) → 활짝(22~29) → 만개(30 완주). 연속 미제출 시 <b>시듦 상태</b>.</p>
+  <p>미션을 완료할수록 너구리 <b>‘오늘이’</b>가 4단계로 자라요.</p>
+  <div class="charrow">
+    <div class="c"><img src="screens/char1.png"><b>1. 첫걸음</b><div class="m">포근하게 첫걸음 떼는 중 — 천천히 가도 괜찮아요 🧣</div><div class="cond">미션 0~7개</div></div>
+    <div class="c"><img src="screens/char2.png"><b>2. 차근차근</b><div class="m">따뜻한 차 한 잔처럼 꾸준함이 쌓이는 중 ☕</div><div class="cond">미션 8~15개</div></div>
+    <div class="c"><img src="screens/char3.png"><b>3. 몰입 모드</b><div class="m">집중하는 모습 멋져요. 조금만 더! 📖</div><div class="cond">미션 16~23개</div></div>
+    <div class="c"><img src="screens/char4.png"><b>4. 완전체</b><div class="m">어엿하게 자랐어요. 끝까지 함께 🏆</div><div class="cond">미션 24~30개</div></div>
+  </div>
+  <div class="wiltbox"><img src="screens/charwilt.png">
+    <div><b>⚡ 방전 상태</b><div class="muted" style="font-size:11.5px;">연속으로 인증을 놓치면 오늘이가 방전돼요. 오늘 인증 한 번이면 다시 충전됩니다.</div></div></div>
 </div>
 
 <h2>5. 핵심 개념 & 운영 팁</h2>
@@ -138,7 +138,7 @@
     <li>매일 자정(KST) 자동으로 날짜가 넘어가고, 미제출은 ‘놓침’ 처리됩니다.</li>
     <li>멤버 인증은 코치 <b>검토</b> 탭에 쌓입니다 — 빨리 피드백할수록 동기부여 ↑.</li>
   </ul>
-  <p class="muted" style="font-size:11px;margin-top:18px;">* 본 가이드북의 화면은 샘플 데이터 예시이며 실제 데이터에 따라 다르게 보입니다.</p>
+  <p class="muted" style="font-size:10.5px;margin-top:12px;">* 화면은 샘플 데이터 예시이며 실제 데이터에 따라 다르게 보입니다.</p>
 </div>
 
 </body>

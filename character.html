@@ -23,8 +23,8 @@
 
     <div class="card" style="display:flex;gap:14px;align-items:center;background:var(--surface-2);">
       <div style="width:72px;flex-shrink:0;text-align:center;" id="wilt-art"></div>
-      <div><div style="font-weight:800;">💧 시듦 상태</div>
-        <div class="small muted">연속으로 인증을 놓치면 오늘이가 시무룩해져요. 오늘 인증으로 다시 생기를 찾아줄 수 있어요.</div></div>
+      <div><div style="font-weight:800;">⚡ 방전 상태</div>
+        <div class="small muted">연속으로 인증을 놓치면 오늘이가 방전돼요. 오늘 인증 한 번이면 다시 충전됩니다.</div></div>
     </div>
   </main>
 
@@ -36,18 +36,19 @@
 <script src="assets/api.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  const COND = ['미션 0~7개 · 시작 단계', '미션 8~15개', '미션 16~23개', '미션 24~30개 · 완주 🏆'];
+  const COND = ['미션 0~7개', '미션 8~15개', '미션 16~23개', '미션 24~30개 · 완주 🏆'];
 
-  // 단계 목록 즉시 렌더 (로그인 불필요) — 1~4단계 영상
+  // 단계 목록 즉시 렌더 (로그인 불필요) — 1~4단계 영상 + 응원 메시지
   document.getElementById('list').innerHTML = CHAR4_LABELS.map((label, idx) => {
     const n = idx + 1;
     return `<div class="card stage-row" data-stage="${n}" style="display:flex;gap:14px;align-items:center;">
       <div style="width:90px;flex-shrink:0;text-align:center;">${charVideo(n, { size: 84 })}</div>
       <div style="flex:1;">
-        <div class="between" style="margin-bottom:3px;">
-          <b style="font-size:15px;">${n}단계 · ${label}</b>
+        <div class="between" style="margin-bottom:4px;">
+          <b style="font-size:15px;">${n}. ${label}</b>
           <span class="cur-tag" style="display:none;font-size:11px;font-weight:800;color:var(--primary-d);background:var(--primary-soft);padding:3px 9px;border-radius:999px;">현재</span>
         </div>
+        <div class="small" style="color:var(--text);margin-bottom:3px;">${CHAR4_MSG[idx]}</div>
         <div class="small muted">${COND[idx]}</div>
       </div>
     </div>`;

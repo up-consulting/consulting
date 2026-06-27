@@ -187,11 +187,17 @@ function todayiSvg(stage, opt = {}) {
 }
 
 /* ===== 마스코트 영상(오늘이) — 30일을 4단계 + 시듦 ===== */
-const CHAR4_LABELS = ['1단계', '2단계', '3단계', '4단계'];
+const CHAR4_LABELS = ['첫걸음', '차근차근', '몰입 모드', '완전체'];
+const CHAR4_MSG = [
+  '포근하게 첫걸음 떼는 중 — 천천히 가도 괜찮아요 🧣',
+  '따뜻한 차 한 잔처럼, 꾸준함이 쌓이고 있어요 ☕',
+  '집중하는 모습 멋져요. 조금만 더 가볼까요? 📖',
+  '어엿하게 자랐어요. 끝까지 함께 가요 🏆',
+];
 function charStage4(done = 0) { return done >= 24 ? 4 : done >= 16 ? 3 : done >= 8 ? 2 : 1; }
 function charStageMsg(stage, wilt) {
-  if (wilt) return '오늘이가 시무룩… 오늘 인증으로 기운을 채워주세요 💧';
-  return ['오늘이가 깨어났어요!', '쑥쑥 자라는 중!', '곧 활짝 필 거예요', '완전히 자랐어요! 🏆'][stage - 1];
+  if (wilt) return '오늘이가 방전됐어요. 오늘 인증으로 충전해줘요 ⚡';
+  return CHAR4_MSG[stage - 1];
 }
 // which: 1~4 또는 'wilt'
 function charVideo(which, opt = {}) {
