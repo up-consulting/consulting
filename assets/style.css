@@ -69,6 +69,7 @@ html.dark .streak-n { color:#F2B89C; }
 /* 마스코트 '오늘이' 둥실 애니메이션 */
 .todayi-wrap svg { animation: bob 3.2s ease-in-out infinite; }
 @keyframes bob { 0%,100%{ transform: translateY(0) } 50%{ transform: translateY(-5px) } }
+.todayi-vid { object-fit: contain; border-radius: 18px; display: inline-block; vertical-align: middle; }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; }

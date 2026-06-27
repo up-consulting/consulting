@@ -36,22 +36,23 @@
 <script src="assets/api.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  const COND = ['시작 전 · 첫 인증을 기다려요', '미션 1~2개 완료', '미션 3~6개 완료',
-    '미션 7~13개 완료', '미션 14~21개 완료', '미션 22~29개 완료', '30개 완주 🏆'];
+  const COND = ['미션 0~7개 · 시작 단계', '미션 8~15개', '미션 16~23개', '미션 24~30개 · 완주 🏆'];
 
-  // 단계 목록 즉시 렌더 (로그인 불필요)
-  document.getElementById('list').innerHTML = TODAYI_LABELS.map((label, i) => `
-    <div class="card stage-row" data-stage="${i}" style="display:flex;gap:14px;align-items:center;">
-      <div style="width:84px;flex-shrink:0;text-align:center;">${todayiSvg(i, { size: 84 })}</div>
+  // 단계 목록 즉시 렌더 (로그인 불필요) — 1~4단계 영상
+  document.getElementById('list').innerHTML = CHAR4_LABELS.map((label, idx) => {
+    const n = idx + 1;
+    return `<div class="card stage-row" data-stage="${n}" style="display:flex;gap:14px;align-items:center;">
+      <div style="width:90px;flex-shrink:0;text-align:center;">${charVideo(n, { size: 84 })}</div>
       <div style="flex:1;">
         <div class="between" style="margin-bottom:3px;">
-          <b style="font-size:15px;">${i}단계 · ${label}</b>
+          <b style="font-size:15px;">${n}단계 · ${label}</b>
           <span class="cur-tag" style="display:none;font-size:11px;font-weight:800;color:var(--primary-d);background:var(--primary-soft);padding:3px 9px;border-radius:999px;">현재</span>
         </div>
-        <div class="small muted">${COND[i]}</div>
+        <div class="small muted">${COND[idx]}</div>
       </div>
-    </div>`).join('');
-  document.getElementById('wilt-art').innerHTML = todayiSvg(2, { size: 72, wilt: true });
+    </div>`;
+  }).join('');
+  document.getElementById('wilt-art').innerHTML = charVideo('wilt', { size: 72 });
 
   // 로그인 상태면 현재 단계 표시 + 탭바
   (async function () {
@@ -60,7 +61,7 @@
       const me = await API.me(); if (!me) return;
       const enr = await API.myEnrollment(); if (!enr) return;
       const stats = await API.enrollmentStats(enr.id);
-      const cur = todayiStage(stats.done);
+      const cur = charStage4(stats.done);
       const row = document.querySelector(`.stage-row[data-stage="${cur}"]`);
       if (row) { row.style.border = '2px solid var(--primary)'; row.querySelector('.cur-tag').style.display = 'inline-block'; }
     } catch (e) {}

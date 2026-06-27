@@ -186,6 +186,20 @@ function todayiSvg(stage, opt = {}) {
   return `<svg viewBox="0 0 120 120" width="${s}" height="${s}"${filt}>${inner}</svg>`;
 }
 
+/* ===== 마스코트 영상(오늘이) — 30일을 4단계 + 시듦 ===== */
+const CHAR4_LABELS = ['1단계', '2단계', '3단계', '4단계'];
+function charStage4(done = 0) { return done >= 24 ? 4 : done >= 16 ? 3 : done >= 8 ? 2 : 1; }
+function charStageMsg(stage, wilt) {
+  if (wilt) return '오늘이가 시무룩… 오늘 인증으로 기운을 채워주세요 💧';
+  return ['오늘이가 깨어났어요!', '쑥쑥 자라는 중!', '곧 활짝 필 거예요', '완전히 자랐어요! 🏆'][stage - 1];
+}
+// which: 1~4 또는 'wilt'
+function charVideo(which, opt = {}) {
+  const size = opt.size || 160;
+  const src = which === 'wilt' ? 'assets/character/wilt.mp4' : `assets/character/s${which}.mp4`;
+  return `<video class="todayi-vid" style="width:${size}px;height:${size}px;" autoplay loop muted playsinline preload="auto"><source src="${src}" type="video/mp4"></video>`;
+}
+
 /* 다크 모드 */
 function applyTheme() {
   document.documentElement.classList.toggle('dark', localStorage.getItem('theme') === 'dark');

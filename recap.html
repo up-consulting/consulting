@@ -89,8 +89,18 @@
       if (t.status === 'approved') { run++; best = Math.max(best, run); } else if (t.status === 'failed') run = 0;
     });
 
+    const cst = charStage4(stats.done);
     document.getElementById('r-char').innerHTML =
-      `<div style="display:inline-block;background:rgba(255,255,255,.16);border-radius:22px;padding:6px;">${todayiSvg(todayiStage(stats.done), { size: 92 })}</div>`;
+      `<div style="display:inline-block;background:rgba(255,255,255,.16);border-radius:22px;padding:6px;"><div id="char-slot">${todayiSvg(todayiStage(stats.done), { size: 92 })}</div></div>`;
+    try { // 영상 첫 프레임을 캡처해 이미지로 교체 (공유 PNG에 포함되도록)
+      const v = document.createElement('video'); v.muted = true; v.playsInline = true; v.src = `assets/character/s${cst}.mp4`;
+      v.addEventListener('loadeddata', () => { v.currentTime = Math.min(0.6, (v.duration || 1) / 2); });
+      v.addEventListener('seeked', () => {
+        const cv = document.createElement('canvas'); cv.width = cv.height = 184;
+        cv.getContext('2d').drawImage(v, 0, 0, 184, 184);
+        document.getElementById('char-slot').innerHTML = `<img src="${cv.toDataURL('image/png')}" width="92" height="92" style="display:block;">`;
+      });
+    } catch (e) {}
     document.getElementById('r-title').textContent = stats.day >= 30 ? '30일 완주 리포트 🏆' : `DAY ${stats.day} 리포트`;
     document.getElementById('r-rate').textContent = stats.rate + '%';
     document.getElementById('r-done').textContent = stats.done;

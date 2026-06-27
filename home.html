@@ -103,8 +103,8 @@
     const rate = Math.round(done / elapsed * 100);
     const dayNo = TODAY ? TODAY.day_number : (done + fail);
     const streak = currentStreak(tasks);
-    const stage = todayiStage(done);
     const wilt = streak === 0 && fail > 0;
+    const cstage = charStage4(done);
     const goals = await API.goals(ENR.id);
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }); // KST 기준
     const myMood = await API.moodToday(ENR.id, today);
@@ -117,9 +117,9 @@
 
     document.getElementById('content').innerHTML = `
       <section class="card" style="text-align:center;cursor:pointer;" onclick="location.href='character.html'">
-        <div class="todayi-wrap">${todayiSvg(stage, { wilt })}</div>
-        <div style="font-weight:800;margin-top:4px;">오늘이 · ${TODAYI_LABELS[stage]}</div>
-        <div class="small muted" style="margin-top:2px;">${todayiMessage(stage, wilt)}</div>
+        ${charVideo(wilt ? 'wilt' : cstage, { size: 168 })}
+        <div style="font-weight:800;margin-top:4px;">오늘이 · ${wilt ? '시듦' : CHAR4_LABELS[cstage - 1]}</div>
+        <div class="small muted" style="margin-top:2px;">${charStageMsg(cstage, wilt)}</div>
         <div class="small" style="color:var(--primary);font-weight:700;margin-top:6px;">성장 가이드 보기 ›</div>
       </section>
 
