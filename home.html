@@ -101,6 +101,7 @@
     const elapsed = done + wait + fail || 1;
     const rate = Math.round(done / elapsed * 100);
     const dayNo = TODAY ? TODAY.day_number : (done + fail);
+    const streak = currentStreak(tasks);
     const goals = await API.goals(ENR.id);
     const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }); // KST 기준
     const myMood = await API.moodToday(ENR.id, today);
@@ -114,9 +115,18 @@
     document.getElementById('content').innerHTML = `
       <section class="card hero">
         <div class="between"><span class="eyebrow">오늘의 미션</span>
-          <span class="day-pill">DAY ${dayNo} / 30</span></div>
+          <div class="row" style="gap:6px;">
+            ${streak > 0 ? `<span class="day-pill">🔥 ${streak}일</span>` : ''}
+            <span class="day-pill">DAY ${dayNo} / 30</span>
+          </div></div>
         ${heroBody}
       </section>
+
+      ${streak > 0 ? `<section class="card streak-card">
+        <div class="streak-flame">🔥</div>
+        <div><div class="streak-n">${streak}일 연속 인증 중!</div>
+          <div class="small muted">오늘도 이어가면 ${streak + 1}일 🔥</div></div>
+      </section>` : ''}
 
       <section class="card">
         <div class="card-head"><span class="card-title">오늘 기분은 어때요?</span>

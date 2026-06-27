@@ -109,6 +109,7 @@ create table if not exists session_notes (
   coach_id      uuid not null references profiles(id) on delete set null,
   summary       text not null default '',
   next_focus    text default '',
+  note_date     date not null default (now() at time zone 'Asia/Seoul')::date,
   created_at    timestamptz not null default now()
 );
 create index if not exists session_notes_enroll_idx on session_notes(enrollment_id);

@@ -186,14 +186,15 @@ const API = {
 
   async notes(enrollmentId) {
     const { data } = await sb.from('session_notes')
-      .select('*').eq('enrollment_id', enrollmentId).order('created_at', { ascending: false });
+      .select('*').eq('enrollment_id', enrollmentId)
+      .order('note_date', { ascending: false }).order('created_at', { ascending: false });
     return data || [];
   },
-  async addNote(enrollmentId, summary, nextFocus) {
+  async addNote(enrollmentId, summary, nextFocus, noteDate) {
     const { data: { user } } = await sb.auth.getUser();
-    const { error } = await sb.from('session_notes').insert({
-      enrollment_id: enrollmentId, coach_id: user.id, summary, next_focus: nextFocus || '',
-    });
+    const row = { enrollment_id: enrollmentId, coach_id: user.id, summary, next_focus: nextFocus || '' };
+    if (noteDate) row.note_date = noteDate;   // 코치가 지정한 노트 날짜
+    const { error } = await sb.from('session_notes').insert(row);
     if (error) throw error;
   },
 

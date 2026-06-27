@@ -53,12 +53,25 @@
         <div class="card-title" style="margin-bottom:6px;">함께하는 코치</div>
         <p class="small muted" style="margin:0;">아직 연결된 코치가 없어요.</p>
       </section>`;
-    let summaryCard = '';
+    let summaryCard = '', badgeCard = '';
 
     if (enr) {
-      const stats = await API.enrollmentStats(enr.id);
-      const logs = await API.moodAll(enr.id);
-      chips = `<span class="chip">DAY ${stats.day} / 30</span><span class="chip">이행률 ${stats.rate}%</span>`;
+      const [stats, logs, tasks] = await Promise.all([
+        API.enrollmentStats(enr.id), API.moodAll(enr.id), API.tracker(enr.id),
+      ]);
+      const streak = currentStreak(tasks);
+      chips = `<span class="chip">DAY ${stats.day} / 30</span>${streak > 0 ? `<span class="chip">🔥 ${streak}일</span>` : ''}<span class="chip">이행률 ${stats.rate}%</span>`;
+
+      const badges = computeBadges({ done: stats.done, streak, journal: logs.length, rate: stats.rate, day: stats.day });
+      const got = badges.filter(b => b.on).length;
+      badgeCard = `
+        <section class="card">
+          <div class="card-head"><span class="card-title">내 배지</span><span class="small muted">${got}/${badges.length}</span></div>
+          <div class="badge-grid">
+            ${badges.map(b => `<div class="badge-item ${b.on ? 'on' : ''}">
+              <div class="be">${b.emoji}</div><div class="bl">${b.label}</div></div>`).join('')}
+          </div>
+        </section>`;
 
       const coachName = enr.coach?.name || '코치';
       coachCard = `
@@ -95,6 +108,7 @@
         ${ME.affirmation ? `<div class="small" style="color:var(--primary-d);font-weight:700;margin-top:10px;">“${ME.affirmation}”</div>` : '<div class="small muted" style="margin-top:10px;">아래 설정에서 나만의 다짐 문구를 적어보세요.</div>'}
         <div class="row mt16" style="justify-content:center;gap:10px;">${chips}</div>
       </section>
+      ${badgeCard}
       ${coachCard}
       ${summaryCard}`;
   })();

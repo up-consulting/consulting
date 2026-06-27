@@ -142,4 +142,28 @@ function lineChart(series, opts = {}) {
   return svg;
 }
 
+/* 현재 연속 인증(스트릭) — day_number 순서로 뒤에서부터 approved 연속 카운트 */
+function currentStreak(tasks) {
+  const elapsed = (tasks || [])
+    .filter(t => ['approved', 'failed', 'pending_review', 'skipped'].includes(t.status))
+    .sort((a, b) => a.day_number - b.day_number);
+  let s = 0;
+  for (let i = elapsed.length - 1; i >= 0; i--) {
+    if (elapsed[i].status === 'approved') s++; else break;
+  }
+  return s;
+}
+
+/* 멤버 배지 계산 — { key, emoji, label, on } 배열 */
+function computeBadges({ done = 0, streak = 0, journal = 0, rate = 0, day = 0 } = {}) {
+  return [
+    { emoji: '🌱', label: '첫 인증',     on: done >= 1 },
+    { emoji: '🔥', label: '7일 연속',    on: streak >= 7 },
+    { emoji: '📝', label: '기록왕',      on: journal >= 7 },
+    { emoji: '⭐', label: '성실러 80%',  on: rate >= 80 },
+    { emoji: '💪', label: '절반 돌파',   on: day >= 15 },
+    { emoji: '🏆', label: '30일 완주',   on: day >= 30 },
+  ];
+}
+
 // 참고: 아래 MOCK 객체는 더 이상 사용하지 않습니다(레이아웃 참고용). 모든 페이지는 API(Supabase) 연동.

@@ -143,6 +143,24 @@ svg { display: block; }
 .btn.block { width: 100%; }
 .btn.danger-ghost { background: var(--danger-soft); color: var(--danger); box-shadow: none; }
 
+/* ---------- 스트릭 ---------- */
+.streak-card { display:flex; align-items:center; gap:14px;
+  background: linear-gradient(135deg, #FFF3E8, #FFE6D2); border:1px solid #F6D7BE; }
+.streak-flame { font-size: 34px; line-height:1; filter: drop-shadow(0 3px 6px rgba(224,135,92,.4));
+  animation: flamep 1.6s ease-in-out infinite; }
+@keyframes flamep { 0%,100%{ transform: scale(1) } 50%{ transform: scale(1.12) } }
+.streak-n { font-weight: 800; font-size: 16px; color: #C2410C; letter-spacing:-0.02em; }
+
+/* ---------- 배지 ---------- */
+.badge-grid { display:grid; grid-template-columns: repeat(3,1fr); gap: 10px; }
+.badge-item { text-align:center; padding: 14px 6px; border-radius: 16px; background: var(--surface-2);
+  border:1px solid var(--line); opacity: .45; filter: grayscale(1); transition: .18s; }
+.badge-item.on { opacity: 1; filter: none; background: linear-gradient(135deg,#FFFDF8,var(--primary-soft));
+  border-color: #CFE3DC; box-shadow: var(--shadow); }
+.badge-item .be { font-size: 26px; line-height:1; }
+.badge-item .bl { font-size: 11px; font-weight: 700; color: var(--muted); margin-top: 6px; }
+.badge-item.on .bl { color: var(--primary-d); }
+
 /* ---------- 칩/뱃지 ---------- */
 .chip { display:inline-flex; align-items:center; gap:5px; padding: 5px 11px; border-radius: 999px;
   font-size: 12px; font-weight: 700; background: var(--surface-2); color: var(--muted); border:1px solid var(--line); }
