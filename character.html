@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<script>if(localStorage.getItem('theme')==='dark')document.documentElement.classList.add('dark');</script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>오늘이 성장 가이드 — 오늘일기</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<div class="app">
+
+  <header class="topbar">
+    <div class="brand"><span class="dot"></span> 오늘이 성장 가이드</div>
+    <div class="spacer"></div>
+    <a href="home.html" class="btn sm line">닫기</a>
+  </header>
+
+  <main class="page">
+    <h1 class="page-title">오늘이는 함께 자라요 🌱</h1>
+    <p class="page-sub">미션을 완료할수록 오늘이가 단계별로 성장해요. 30일 끝엔 활짝 만개!</p>
+    <div id="list"></div>
+
+    <div class="card" style="display:flex;gap:14px;align-items:center;background:var(--surface-2);">
+      <div style="width:72px;flex-shrink:0;text-align:center;" id="wilt-art"></div>
+      <div><div style="font-weight:800;">💧 시듦 상태</div>
+        <div class="small muted">연속으로 인증을 놓치면 오늘이가 시무룩해져요. 오늘 인증으로 다시 생기를 찾아줄 수 있어요.</div></div>
+    </div>
+  </main>
+
+  <div id="tabbar-slot"></div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="assets/supabase-client.js"></script>
+<script src="assets/api.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  const COND = ['시작 전 · 첫 인증을 기다려요', '미션 1~2개 완료', '미션 3~6개 완료',
+    '미션 7~13개 완료', '미션 14~21개 완료', '미션 22~29개 완료', '30개 완주 🏆'];
+
+  // 단계 목록 즉시 렌더 (로그인 불필요)
+  document.getElementById('list').innerHTML = TODAYI_LABELS.map((label, i) => `
+    <div class="card stage-row" data-stage="${i}" style="display:flex;gap:14px;align-items:center;">
+      <div style="width:84px;flex-shrink:0;text-align:center;">${todayiSvg(i, { size: 84 })}</div>
+      <div style="flex:1;">
+        <div class="between" style="margin-bottom:3px;">
+          <b style="font-size:15px;">${i}단계 · ${label}</b>
+          <span class="cur-tag" style="display:none;font-size:11px;font-weight:800;color:var(--primary-d);background:var(--primary-soft);padding:3px 9px;border-radius:999px;">현재</span>
+        </div>
+        <div class="small muted">${COND[i]}</div>
+      </div>
+    </div>`).join('');
+  document.getElementById('wilt-art').innerHTML = todayiSvg(2, { size: 72, wilt: true });
+
+  // 로그인 상태면 현재 단계 표시 + 탭바
+  (async function () {
+    try {
+      document.getElementById('tabbar-slot').innerHTML = renderTabbar('profile');
+      const me = await API.me(); if (!me) return;
+      const enr = await API.myEnrollment(); if (!enr) return;
+      const stats = await API.enrollmentStats(enr.id);
+      const cur = todayiStage(stats.done);
+      const row = document.querySelector(`.stage-row[data-stage="${cur}"]`);
+      if (row) { row.style.border = '2px solid var(--primary)'; row.querySelector('.cur-tag').style.display = 'inline-block'; }
+    } catch (e) {}
+  })();
+</script>
+</body>
+</html>

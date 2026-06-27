@@ -116,10 +116,11 @@
       : `<h2>${missionText}</h2><p class="small" style="opacity:.85;margin:0;">오늘은 예정된 인증이 없어요.</p>`;
 
     document.getElementById('content').innerHTML = `
-      <section class="card" style="text-align:center;">
+      <section class="card" style="text-align:center;cursor:pointer;" onclick="location.href='character.html'">
         <div class="todayi-wrap">${todayiSvg(stage, { wilt })}</div>
         <div style="font-weight:800;margin-top:4px;">오늘이 · ${TODAYI_LABELS[stage]}</div>
         <div class="small muted" style="margin-top:2px;">${todayiMessage(stage, wilt)}</div>
+        <div class="small" style="color:var(--primary);font-weight:700;margin-top:6px;">성장 가이드 보기 ›</div>
       </section>
 
       <section class="card hero">
