@@ -57,6 +57,9 @@
         <div id="unconnected"></div>
       </div>
     </section>
+
+    <!-- 멤버 상세 -->
+    <section id="detail" hidden></section>
   </main>
 </div>
 
@@ -107,7 +110,11 @@
 <script src="assets/api.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  let ME, REVIEWS = [], MEMBERS = [], CUR_REVIEW = null, CUR_CONNECT = null, CUR_MAIN = null;
+  let ME, REVIEWS = [], MEMBERS = [], CUR_REVIEW = null, CUR_CONNECT = null, CUR_MAIN = null, DETAIL_I = null;
+  const CELL = { approved:'done', pending_review:'wait', failed:'fail', today:'today', locked:'locked', skipped:'locked' };
+  const ST = { approved:['완료','ok'], pending_review:['검토중','wait'], failed:['놓침','fail'], today:['오늘','wait'], locked:['예정','muted'], skipped:['건너뜀','muted'] };
+  const MOODC = ['#D9755B','#E89B72','#C9B873','#7DA697','#4F7C72'];
+  const WD = s => ['일','월','화','수','목','금','토'][new Date(s + 'T00:00:00').getDay()];
 
   (async function init() {
     document.getElementById('out').innerHTML = icon('logout', 18);
@@ -138,12 +145,12 @@
       : '<p class="small muted" style="margin:0;">지금은 특별히 살펴볼 신호가 없어요.</p>';
 
     document.getElementById('members').innerHTML = members.length ? members.map((c, i) => `
-      <div class="list-item">
+      <div class="list-item" style="cursor:pointer;" onclick="openMember(${i})">
         <div class="avatar">${(c.member?.name || '?')[0]}</div>
         <div class="meta"><div class="nm">${c.member?.name || '멤버'}</div>
           <div class="sub">DAY ${c.day}/30 · 이행률 ${c.rate}% · 기분 ${c.moodAvg || '–'}</div>
           <div class="sub" style="color:var(--primary-d);">🎯 ${c.goal_summary || '메인 목표 미설정'}</div></div>
-        <button class="btn sm line" onclick="openEditMain(${i})">목표</button>
+        <span class="muted" style="font-size:22px;line-height:1;">›</span>
       </div>`).join('')
       : '<p class="small muted" style="margin:0;">아직 연결된 멤버가 없어요. ‘멤버 연결’ 탭에서 시작하세요.</p>';
   }
@@ -161,9 +168,148 @@
     const btn = document.getElementById('mg-save'); btn.disabled = true; btn.textContent = '저장 중…';
     try {
       await API.updateEnrollmentGoal(CUR_MAIN, text);
-      closeModal('m-maingoal'); toast('메인 목표를 수정했어요'); await loadDash();
+      closeModal('m-maingoal'); toast('메인 목표를 수정했어요');
+      await loadDash();
+      if (!document.getElementById('detail').hidden && DETAIL_I != null) await openMember(DETAIL_I);
     } catch (e) { toast(e.message || '저장 실패'); }
     finally { btn.disabled = false; btn.textContent = '저장하기'; }
+  }
+
+  /* ---------------- 멤버 상세 ---------------- */
+  async function openMember(i) {
+    const c = MEMBERS[i]; if (!c) return;
+    DETAIL_I = i;
+    document.getElementById('seg').hidden = true;
+    document.querySelectorAll('[data-pane]').forEach(p => p.hidden = true);
+    const d = document.getElementById('detail');
+    d.hidden = false;
+    d.innerHTML = '<p class="small muted">불러오는 중…</p>';
+    window.scrollTo({ top: 0 });
+
+    const eid = c.id;
+    const [stats, tasks, logs, goals, notes] = await Promise.all([
+      API.enrollmentStats(eid), API.tracker(eid), API.moodAll(eid), API.goals(eid), API.notes(eid),
+    ]);
+    await Promise.all(tasks.filter(t => t.proof_url).map(async t => {
+      const { data } = await sb.storage.from('proofs').createSignedUrl(t.proof_url, 600);
+      t._img = data?.signedUrl || null;
+    }));
+    renderDetail(c, stats, tasks, logs, goals, notes);
+  }
+
+  function renderDetail(c, stats, tasks, logs, goals, notes) {
+    const name = c.member?.name || '멤버';
+
+    const cells = tasks.map(t => `<div class="cell ${CELL[t.status] || 'locked'}">${t.day_number}</div>`).join('');
+
+    let chart;
+    if (logs.length >= 2) {
+      const r = logs.slice(-14);
+      chart = lineChart([r.map(l => l.mood), r.map(l => l.energy ?? l.mood)]);
+    } else chart = '<p class="small muted center" style="padding:20px 0;">기분 기록이 2개 이상이면 그래프가 나와요.</p>';
+
+    const goalsHtml = goals.length ? goals.map(g => {
+      const pct = Math.min(100, Math.round(g.current_value / g.target_value * 100));
+      return `<div style="margin-bottom:12px;"><div class="between" style="margin-bottom:5px;">
+        <span class="small" style="font-weight:700;">${g.title}</span>
+        <span class="small muted">${g.current_value}/${g.target_value}${g.unit || ''}</span></div>
+        <div class="progress warm"><i style="width:${pct}%"></i></div></div>`;
+    }).join('') : '<p class="small muted" style="margin:0;">등록된 서브 목표가 없어요.</p>';
+
+    const byDate = {};
+    tasks.forEach(t => { (byDate[t.date] = byDate[t.date] || {}).task = t; });
+    logs.forEach(l => { (byDate[l.date] = byDate[l.date] || {}).mood = l; });
+    const days = Object.keys(byDate).map(dd => ({ date: dd, ...byDate[dd] }))
+      .filter(x => (x.task && ['approved','pending_review','failed'].includes(x.task.status)) || x.mood)
+      .sort((a, b) => (a.date < b.date ? 1 : -1));
+    const feed = days.length ? days.map(x => {
+      const [stL, stC] = x.task ? (ST[x.task.status] || ST.locked) : [null, null];
+      let body = '';
+      if (x.task && ['approved','pending_review','failed'].includes(x.task.status)) {
+        if (x.task._img) body += `<div style="border-radius:10px;overflow:hidden;margin:8px 0;"><img src="${x.task._img}" style="width:100%;display:block;"></div>`;
+        body += `<div class="small">${x.task.proof_text || '<span class="muted">인증 메모 없음</span>'}</div>`;
+      }
+      if (x.mood) { const cc = MOODC[x.mood.mood - 1];
+        body += `<div class="row" style="gap:8px;margin-top:8px;align-items:flex-start;">
+          <div class="avatar" style="width:30px;height:30px;border-radius:10px;background:${cc}1f;color:${cc};font-size:12px;">${x.mood.mood}</div>
+          <div class="meta"><div class="sub">느낀점 · ${MOOD_LABELS[x.mood.mood - 1]}${x.mood.energy ? ` · 에너지 ${x.mood.energy}` : ''}</div>
+            <div class="small">${x.mood.note || '<span class="muted">한 줄 기록</span>'}</div></div></div>`;
+      }
+      if (x.task && x.task.review_note) body += `<div style="margin-top:8px;padding:9px 11px;border-radius:11px;background:var(--primary-soft);" class="small"><b style="color:var(--primary-d);">내 피드백</b> · <span style="color:var(--primary-d);">${x.task.review_note}</span></div>`;
+      return `<div style="padding:12px 0;border-bottom:1px solid var(--line);">
+        <div class="between"><strong class="small">${x.task ? `DAY ${x.task.day_number} · ` : ''}${x.date.slice(5).replace('-', '.')} (${WD(x.date)})</strong>
+        ${stL ? `<span class="badge ${stC}">${stL}</span>` : ''}</div>${body}</div>`;
+    }).join('') : '<p class="small muted" style="margin:0;">아직 기록이 없어요.</p>';
+
+    const notesHtml = notes.length ? notes.map(n => `<div style="padding:11px 0;border-bottom:1px solid var(--line);">
+      <div class="small" style="font-weight:700;">${n.summary}</div>
+      ${n.next_focus ? `<div class="small muted">다음 포커스: ${n.next_focus}</div>` : ''}
+      <div class="small muted" style="margin-top:3px;">${n.created_at.slice(0, 10)}</div></div>`).join('')
+      : '<p class="small muted" style="margin:0;">아직 작성한 노트가 없어요.</p>';
+
+    document.getElementById('detail').innerHTML = `
+      <button class="btn sm line" onclick="backToDash()" style="margin-bottom:14px;">← 멤버 목록</button>
+      <div class="row" style="gap:12px;margin-bottom:16px;">
+        <div class="avatar" style="width:54px;height:54px;border-radius:17px;font-size:21px;">${name[0]}</div>
+        <div><div style="font-weight:800;font-size:19px;">${name}</div>
+          <div class="small muted">DAY ${stats.day}/30 · ${c.start_date} ~ ${c.end_date}</div></div>
+      </div>
+
+      <section class="card hero">
+        <div class="between"><span class="eyebrow">메인 목표 · 오늘의 미션</span>
+          <button class="btn sm line" onclick="openEditMain(${DETAIL_I})">수정</button></div>
+        <h2 style="margin:8px 0 0;">${c.goal_summary || '메인 목표 미설정'}</h2>
+      </section>
+
+      <div class="kpi-row">
+        <div class="kpi"><div class="n" style="color:var(--primary);">${stats.done}</div><div class="l">완료</div></div>
+        <div class="kpi"><div class="n" style="color:var(--gold);">${stats.wait}</div><div class="l">검토중</div></div>
+        <div class="kpi"><div class="n" style="color:var(--danger);">${stats.failed}</div><div class="l">놓침</div></div>
+      </div>
+      <div class="card">
+        <div class="between" style="margin-bottom:8px;"><span class="small muted">이행률</span>
+          <span style="font-weight:800;color:var(--primary-d);">${stats.rate}%</span></div>
+        <div class="progress"><i style="width:${stats.rate}%"></i></div>
+        <div class="between mt12"><span class="small muted">평균 기분</span><span style="font-weight:800;">${stats.moodAvg || '–'}</span></div>
+      </div>
+
+      <div class="card"><div class="card-title" style="margin-bottom:12px;">30일 트래커</div>
+        <div class="tracker">${cells || '<p class="small muted" style="margin:0;">아직 시작 전이에요.</p>'}</div></div>
+
+      <div class="card"><div class="card-head"><span class="card-title">기분·에너지 추이</span><span class="small muted">1~5</span></div>${chart}
+        <div class="legend"><span><i style="background:#4F7C72;"></i>기분</span><span><i style="background:#E89B72;"></i>에너지</span></div></div>
+
+      <div class="card"><div class="card-title" style="margin-bottom:12px;">서브 목표</div>${goalsHtml}</div>
+
+      <div class="card"><div class="card-title" style="margin-bottom:6px;">기록 타임라인</div>
+        <p class="small muted" style="margin:0 0 8px;">미션 인증 · 느낀점 · 내 피드백</p>${feed}</div>
+
+      <div class="card"><div class="card-title" style="margin-bottom:12px;">코치 노트</div>
+        <div class="field"><textarea id="note-summary" placeholder="오늘 관찰/상담 요약"></textarea></div>
+        <div class="field"><input id="note-focus" placeholder="다음 포커스 (선택)"></div>
+        <button class="btn sm" onclick="saveNote()">노트 추가</button>
+        <div class="hr"></div>${notesHtml}</div>`;
+    window.scrollTo({ top: 0 });
+  }
+
+  function backToDash() {
+    document.getElementById('detail').hidden = true;
+    DETAIL_I = null;
+    document.getElementById('seg').hidden = false;
+    const active = document.querySelector('#seg button.on')?.dataset.t || 'dash';
+    document.querySelectorAll('[data-pane]').forEach(p => p.hidden = p.dataset.pane !== active);
+    window.scrollTo({ top: 0 });
+  }
+
+  async function saveNote() {
+    const c = MEMBERS[DETAIL_I]; if (!c) return;
+    const s = document.getElementById('note-summary').value.trim();
+    if (!s) return toast('노트 내용을 입력해주세요');
+    const focus = document.getElementById('note-focus').value.trim();
+    try {
+      await API.addNote(c.id, s, focus);
+      toast('노트를 추가했어요'); await openMember(DETAIL_I);
+    } catch (e) { toast(e.message || '추가 실패'); }
   }
 
   async function loadReviews() {

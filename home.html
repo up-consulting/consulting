@@ -102,7 +102,7 @@
     const rate = Math.round(done / elapsed * 100);
     const dayNo = TODAY ? TODAY.day_number : (done + fail);
     const goals = await API.goals(ENR.id);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }); // KST 기준
     const myMood = await API.moodToday(ENR.id, today);
 
     // 오늘의 미션 = 메인 목표(코치가 정한 goal_summary)

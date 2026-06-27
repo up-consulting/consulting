@@ -82,7 +82,8 @@ const API = {
   },
   async logMood(enrollmentId, mood, energy, note) {
     const { data: { user } } = await sb.auth.getUser();
-    const date = new Date().toISOString().slice(0, 10);
+    const date = new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' }); // KST 기준
+
     const { error } = await sb.from('mood_logs').upsert(
       { enrollment_id: enrollmentId, member_id: user.id, date, mood, energy, note: note || '' },
       { onConflict: 'enrollment_id,date' }
