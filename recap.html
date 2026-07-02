@@ -91,7 +91,7 @@
 
     const cst = charStage4(stats.done);
     document.getElementById('r-char').innerHTML =
-      `<div style="display:inline-block;background:rgba(255,255,255,.16);border-radius:22px;padding:6px;">${charSvg(cst, { size: 92 })}</div>`;
+      `<div style="display:inline-block;background:rgba(255,255,255,.16);border-radius:22px;padding:4px;">${charImg(cst, { size: 96 })}</div>`;
     document.getElementById('r-title').textContent = stats.day >= 30 ? '30일 완주 리포트 🏆' : `DAY ${stats.day} 리포트`;
     document.getElementById('r-rate').textContent = stats.rate + '%';
     document.getElementById('r-done').textContent = stats.done;

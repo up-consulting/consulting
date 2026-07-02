@@ -36,13 +36,13 @@
 <script src="assets/api.js"></script>
 <script src="assets/app.js"></script>
 <script>
-  const COND = ['미션 0~7개', '미션 8~15개', '미션 16~23개', '미션 24~30개 · 완주 🏆'];
+  const COND = ['미션 0~5개', '미션 6~11개', '미션 12~17개', '미션 18~23개', '미션 24~30개 · 완주 🎉'];
 
-  // 단계 목록 즉시 렌더 (로그인 불필요) — 1~4단계 영상 + 응원 메시지
+  // 단계 목록 즉시 렌더 (로그인 불필요) — 1~5단계 이미지 + 응원 메시지
   document.getElementById('list').innerHTML = CHAR4_LABELS.map((label, idx) => {
     const n = idx + 1;
     return `<div class="card stage-row" data-stage="${n}" style="display:flex;gap:14px;align-items:center;">
-      <div style="width:90px;flex-shrink:0;text-align:center;">${charSvg(n, { size: 84 })}</div>
+      <div style="width:90px;flex-shrink:0;text-align:center;">${charImg(n, { size: 84 })}</div>
       <div style="flex:1;">
         <div class="between" style="margin-bottom:4px;">
           <b style="font-size:15px;">${n}. ${label}</b>
@@ -53,7 +53,7 @@
       </div>
     </div>`;
   }).join('');
-  document.getElementById('wilt-art').innerHTML = charSvg('wilt', { size: 72 });
+  document.getElementById('wilt-art').innerHTML = charImg('wilt', { size: 72, base: 2 });
 
   // 로그인 상태면 현재 단계 표시 + 탭바
   (async function () {

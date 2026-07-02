@@ -97,15 +97,15 @@
 
 ## 4. 캐릭터 ‘오늘이’ 성장
 
-미션을 완료할수록 너구리 **‘오늘이’**가 4단계로 자랍니다 (홈·리캡·성장가이드에 등장).
+미션을 완료할수록 다람쥐 **‘오늘이’**가 5단계로 자랍니다 (홈·리캡·성장가이드에 등장).
 
-| | 1. 첫걸음 | 2. 차근차근 | 3. 몰입 모드 | 4. 완전체 |
-|---|---|---|---|---|
-| | <img src="docs/screens/char1.png" width="90"> | <img src="docs/screens/char2.png" width="90"> | <img src="docs/screens/char3.png" width="90"> | <img src="docs/screens/char4.png" width="90"> |
-| 메시지 | 포근하게 첫걸음 🧣 | 꾸준함이 쌓이는 중 ☕ | 집중하는 모습 멋져요 📖 | 어엿하게 자랐어요 🏆 |
-| 조건 | 미션 0~7개 | 8~15개 | 16~23개 | 24~30개 |
+| | 1. 첫걸음 | 2. 새내기 | 3. 수집가 | 4. 탐험가 | 5. 완주 |
+|---|---|---|---|---|---|
+| | <img src="docs/screens/char1.png" width="80"> | <img src="docs/screens/char2.png" width="80"> | <img src="docs/screens/char3.png" width="80"> | <img src="docs/screens/char4.png" width="80"> | <img src="docs/screens/char5.png" width="80"> |
+| 메시지 | 도토리 안고 첫걸음 🐿️ | 하루하루 채우는 중 🌰 | 도토리 한가득 🧺 | 성장 모험 중 🧭 | 30일 완주 🎉 |
+| 조건 | 0~5개 | 6~11개 | 12~17개 | 18~23개 | 24~30개 |
 
-**⚡ 방전 상태** <img src="docs/screens/charwilt.png" width="70"> — 연속으로 인증을 놓치면 오늘이가 방전돼요. 오늘 인증 한 번이면 다시 충전됩니다.
+**⚡ 방전 상태** <img src="docs/screens/charwilt.png" width="70"> — 연속으로 인증을 놓치면 오늘이가 방전돼요(흐리게 표시). 오늘 인증 한 번이면 다시 충전됩니다.
 
 ---
 

@@ -187,17 +187,30 @@ function todayiSvg(stage, opt = {}) {
 }
 
 /* ===== 마스코트 영상(오늘이) — 30일을 4단계 + 시듦 ===== */
-const CHAR4_LABELS = ['첫걸음', '차근차근', '몰입 모드', '완전체'];
+const CHAR4_LABELS = ['첫걸음', '새내기', '수집가', '탐험가', '완주'];
 const CHAR4_MSG = [
-  '포근하게 첫걸음 떼는 중 — 천천히 가도 괜찮아요 🧣',
-  '따뜻한 차 한 잔처럼, 꾸준함이 쌓이고 있어요 ☕',
-  '집중하는 모습 멋져요. 조금만 더 가볼까요? 📖',
-  '어엿하게 자랐어요. 끝까지 함께 가요 🏆',
+  '아기 오늘이가 도토리를 안고 첫걸음 🐿️',
+  '새내기가 됐어요 — 하루하루 채우는 중 🌰',
+  '도토리를 한가득! 부지런한 수집가 🧺',
+  '지도 들고 성장 모험 중이에요 🧭',
+  '30일 완주! 오늘이가 활짝 폈어요 🎉',
 ];
-function charStage4(done = 0) { return done >= 24 ? 4 : done >= 16 ? 3 : done >= 8 ? 2 : 1; }
+// 5단계 (0~5 / 6~11 / 12~17 / 18~23 / 24~30 완료)
+function charStage4(done = 0) { return done >= 24 ? 5 : done >= 18 ? 4 : done >= 12 ? 3 : done >= 6 ? 2 : 1; }
 function charStageMsg(stage, wilt) {
   if (wilt) return '오늘이가 방전됐어요. 오늘 인증으로 충전해줘요 ⚡';
   return CHAR4_MSG[stage - 1];
+}
+// 실제 3D 이미지 마스코트. which: 1~5 또는 'wilt'(현재단계를 흐리게+💤)
+function charImg(which, opt = {}) {
+  const size = opt.size || 160;
+  const wilt = which === 'wilt';
+  const n = wilt ? (opt.base || 1) : which;
+  const dim = wilt ? 'filter:grayscale(.85) brightness(.92);opacity:.85;' : '';
+  return `<div class="todayi-img" style="position:relative;display:inline-block;width:${size}px;height:${size}px;">`
+    + `<img src="assets/character/stage${n}.png" alt="오늘이" style="width:100%;height:100%;object-fit:contain;${dim}">`
+    + (wilt ? '<span style="position:absolute;top:0;right:4px;font-size:20px;">💤</span>' : '')
+    + `</div>`;
 }
 // which: 1~4 또는 'wilt'
 function charVideo(which, opt = {}) {
