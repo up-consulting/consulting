@@ -103,7 +103,7 @@
 |---|---|---|---|---|---|
 | | <img src="docs/screens/char1.png" width="80"> | <img src="docs/screens/char2.png" width="80"> | <img src="docs/screens/char3.png" width="80"> | <img src="docs/screens/char4.png" width="80"> | <img src="docs/screens/char5.png" width="80"> |
 | 메시지 | 도토리 안고 첫걸음 🐿️ | 하루하루 채우는 중 🌰 | 도토리 한가득 🧺 | 성장 모험 중 🧭 | 30일 완주 🎉 |
-| 조건 | 0~5개 | 6~11개 | 12~17개 | 18~23개 | 24~30개 |
+| 조건 | 0~7개 | 8~14개 | 15~21개 | 22~29개 | 30개 완주 시 |
 
 **⚡ 방전 상태** <img src="docs/screens/charwilt.png" width="70"> — 연속으로 인증을 놓치면 오늘이가 방전돼요(흐리게 표시). 오늘 인증 한 번이면 다시 충전됩니다.
 

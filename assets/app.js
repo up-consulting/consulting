@@ -195,8 +195,8 @@ const CHAR4_MSG = [
   '지도 들고 성장 모험 중이에요 🧭',
   '30일 완주! 오늘이가 활짝 폈어요 🎉',
 ];
-// 5단계 (0~5 / 6~11 / 12~17 / 18~23 / 24~30 완료)
-function charStage4(done = 0) { return done >= 24 ? 5 : done >= 18 ? 4 : done >= 12 ? 3 : done >= 6 ? 2 : 1; }
+// 5단계: 5번(완주 축하)은 30개 전부 완료했을 때만. 1~4는 0~29 재배분
+function charStage4(done = 0) { return done >= 30 ? 5 : done >= 22 ? 4 : done >= 15 ? 3 : done >= 8 ? 2 : 1; }
 function charStageMsg(stage, wilt) {
   if (wilt) return '오늘이가 방전됐어요. 오늘 인증으로 충전해줘요 ⚡';
   return CHAR4_MSG[stage - 1];
