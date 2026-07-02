@@ -206,6 +206,71 @@ function charVideo(which, opt = {}) {
   return `<video class="todayi-vid" style="width:${size}px;height:${size}px;" autoplay loop muted playsinline preload="auto"><source src="${src}" type="video/mp4"></video>`;
 }
 
+/* 브랜드 톤 SVG 다람쥐 '오늘이' — 4단계(+방전). 도토리에서 시작해 자라는 컨셉 */
+function charSvg(which, opt = {}) {
+  const s = opt.size || 160;
+  const wilt = which === 'wilt';
+  const stage = wilt ? 1 : which;
+  const FUR = '#C79A6A', FUR_D = '#A9814F', CREAM = '#F3ECDD', TIP = '#E7D6BB', NOSE = '#6B4E38', EYE = '#3A2E22', BL = '#F1A88A';
+  const leaf = (x, y, r, sc, c) => `<path d="M0 0C8 -2 13 -10 11 -19C3 -16 -3 -8 0 0Z" transform="translate(${x} ${y}) rotate(${r}) scale(${sc})" fill="${c}"/>`;
+  const acorn = (cx, cy) => `<ellipse cx="${cx}" cy="${cy + 2}" rx="8" ry="9" fill="#C68A4C"/>`
+    + `<path d="M${cx - 9} ${cy - 3}q9 -7 18 0q-1 4.5 -9 4.5q-8 0 -9 -4.5z" fill="#8A6238"/>`
+    + `<path d="M${cx} ${cy - 7}v-3" stroke="#8A6238" stroke-width="2" stroke-linecap="round"/>`;
+
+  // 앞에 안고 있는 것 (단계별 성장): 도토리 → 새싹 → 잎 → 꽃
+  let plant;
+  if (wilt) {
+    plant = `<path d="M60 100v-7q0-6-6-8" stroke="#B79C79" stroke-width="3" fill="none" stroke-linecap="round"/>`
+      + `<path d="M56 88q-7 0-10 6" stroke="#B79C79" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+  } else if (stage === 1) {
+    plant = acorn(60, 92);
+  } else if (stage === 2) {
+    plant = acorn(60, 94) + `<path d="M60 87V80" stroke="#5E978A" stroke-width="2.6" stroke-linecap="round"/>`
+      + leaf(60, 82, -45, 0.5, '#6FA294') + leaf(60, 82, 225, -0.5, '#5E978A');
+  } else {
+    const top = stage >= 4 ? 80 : 84;
+    plant = `<path d="M60 101V${top}" stroke="#5E978A" stroke-width="3.2" stroke-linecap="round"/>`
+      + leaf(60, 95, -48, 0.62, '#6FA294') + leaf(60, 95, 228, -0.62, '#5E978A')
+      + leaf(60, 89, -52, 0.55, '#6BA091') + leaf(60, 89, 232, -0.55, '#6FA294');
+    if (stage >= 4) plant += `<g transform="translate(60 79)">`
+      + [0, 72, 144, 216, 288].map(a => `<ellipse cx="0" cy="-7.5" rx="4.6" ry="7" fill="#F0A98A" transform="rotate(${a})"/>`).join('')
+      + `<circle r="4.2" fill="#F6C84C"/></g>`;
+  }
+
+  const eyes = wilt
+    ? `<path d="M43 55q5 -4 10 0" stroke="${EYE}" stroke-width="2.2" fill="none" stroke-linecap="round"/><path d="M67 55q5 -4 10 0" stroke="${EYE}" stroke-width="2.2" fill="none" stroke-linecap="round"/>`
+    : `<circle cx="49" cy="55" r="5.4" fill="${EYE}"/><circle cx="51" cy="53" r="1.7" fill="#fff"/><circle cx="71" cy="55" r="5.4" fill="${EYE}"/><circle cx="73" cy="53" r="1.7" fill="#fff"/>`;
+
+  return `<svg viewBox="0 0 120 120" width="${s}" height="${s}"${wilt ? ' style="filter:grayscale(.28);"' : ''}>
+    <!-- 큰 꼬리 -->
+    <path d="M78 96C116 96 116 30 86 26C108 36 102 82 78 82Z" fill="${FUR}"/>
+    <path d="M88 36C102 44 100 70 84 76" fill="none" stroke="${TIP}" stroke-width="7" stroke-linecap="round"/>
+    <!-- 발 -->
+    <ellipse cx="47" cy="107" rx="6.5" ry="4.4" fill="${FUR_D}"/><ellipse cx="70" cy="107" rx="6.5" ry="4.4" fill="${FUR_D}"/>
+    <!-- 몸 -->
+    <ellipse cx="57" cy="88" rx="24" ry="22" fill="${FUR}"/>
+    <ellipse cx="57" cy="92" rx="14" ry="14" fill="${CREAM}"/>
+    <!-- 귀 -->
+    <path d="M42 24q-5 -15 5 -18q9 5 7 18z" fill="${FUR}"/><path d="M78 24q5 -15 -5 -18q-9 5 -7 18z" fill="${FUR}"/>
+    <path d="M44 22q-2 -9 3 -11q4 3 3 11z" fill="${TIP}"/><path d="M76 22q2 -9 -3 -11q-4 3 -3 11z" fill="${TIP}"/>
+    <!-- 머리 -->
+    <circle cx="60" cy="52" r="28" fill="${FUR}"/>
+    <path d="M60 30q9 8 9 20q0 10 -9 16q-9 -6 -9 -16q0 -12 9 -20z" fill="${CREAM}" opacity=".55"/>
+    ${eyes}
+    <ellipse cx="60" cy="64" rx="10" ry="7.5" fill="${CREAM}"/>
+    <path d="M60 60l-3.5 3.5h7z" fill="${NOSE}"/>
+    <path d="M60 63.5v3" stroke="${NOSE}" stroke-width="1.4" stroke-linecap="round"/>
+    <rect x="57.6" y="66.5" width="4.8" height="5" rx="1.3" fill="#fff" stroke="#E3DAC8" stroke-width=".6"/>
+    <path d="M60 66.5v5" stroke="#E3DAC8" stroke-width=".6"/>
+    <circle cx="45" cy="63" r="3.2" fill="${BL}" opacity=".5"/><circle cx="75" cy="63" r="3.2" fill="${BL}" opacity=".5"/>
+    <!-- 앞발(안기) -->
+    <ellipse cx="51" cy="98" rx="5.2" ry="6.8" fill="${FUR}" transform="rotate(18 51 98)"/>
+    <ellipse cx="66" cy="98" rx="5.2" ry="6.8" fill="${FUR}" transform="rotate(-18 66 98)"/>
+    ${plant}
+    ${wilt ? '<text x="82" y="38" font-size="12">💤</text>' : ''}
+  </svg>`;
+}
+
 /* 다크 모드 */
 function applyTheme() {
   document.documentElement.classList.toggle('dark', localStorage.getItem('theme') === 'dark');

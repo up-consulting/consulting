@@ -117,7 +117,7 @@
 
     document.getElementById('content').innerHTML = `
       <section class="card" style="text-align:center;cursor:pointer;" onclick="location.href='character.html'">
-        ${charVideo(wilt ? 'wilt' : cstage, { size: 168 })}
+        <div class="todayi-wrap">${charSvg(wilt ? 'wilt' : cstage, { size: 160 })}</div>
         <div style="font-weight:800;margin-top:4px;">오늘이 · ${wilt ? '시듦' : CHAR4_LABELS[cstage - 1]}</div>
         <div class="small muted" style="margin-top:2px;">${charStageMsg(cstage, wilt)}</div>
         <div class="small" style="color:var(--primary);font-weight:700;margin-top:6px;">성장 가이드 보기 ›</div>

@@ -42,7 +42,7 @@
   document.getElementById('list').innerHTML = CHAR4_LABELS.map((label, idx) => {
     const n = idx + 1;
     return `<div class="card stage-row" data-stage="${n}" style="display:flex;gap:14px;align-items:center;">
-      <div style="width:90px;flex-shrink:0;text-align:center;">${charVideo(n, { size: 84 })}</div>
+      <div style="width:90px;flex-shrink:0;text-align:center;">${charSvg(n, { size: 84 })}</div>
       <div style="flex:1;">
         <div class="between" style="margin-bottom:4px;">
           <b style="font-size:15px;">${n}. ${label}</b>
@@ -53,7 +53,7 @@
       </div>
     </div>`;
   }).join('');
-  document.getElementById('wilt-art').innerHTML = charVideo('wilt', { size: 72 });
+  document.getElementById('wilt-art').innerHTML = charSvg('wilt', { size: 72 });
 
   // 로그인 상태면 현재 단계 표시 + 탭바
   (async function () {
